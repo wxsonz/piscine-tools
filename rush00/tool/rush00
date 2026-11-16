@@ -1,0 +1,1529 @@
+#!/usr/bin/env python3
+"""rush00 — drop a team, get an evaluation sheet.
+
+    rush00 serve [--port N]     the web visualizer (drop teams in the browser)
+    rush00                      evaluate every team folder in rush00/repo
+    rush00 <dir|git-url> ...    evaluate (and clone, for a URL) those teams
+    rush00 subject <pdf|txt>    load the real subject of the day into subject.txt
+    rush00 init                 write a blank subject.txt template
+
+options:
+    --leader LOGIN   team leader (picks the assigned rush if subject.txt has `assign`)
+    --rush N         the assigned rush number, if you already know it
+    --open           open the report in the browser when done
+    --no-norm        skip norminette
+
+The core of rush00 is fixed (rush(x, y) draws an x-wide, y-tall rectangle from
+a 3x3 pattern of corner/edge/fill chars, x==1 keeps the left column, y==1
+keeps the top row; files main.c ft_putchar.c rush0X.c; only write allowed).
+What changes between subject versions (the chars, the examples, file names,
+flags, the assignment rule) is read from subject.txt next to this script.
+Without it every rush is checked for self-consistency against the team's own
+output and its pattern is shown for you to compare with the PDF.
+"""
+
+import json
+import os
+import re
+import shlex
+import shutil
+import signal
+import subprocess
+import sys
+import tempfile
+import textwrap
+import time
+import webbrowser
+
+# layout:  rush/common/codemap.py   rush/rush00/{tool,repo,reports}
+TOOL_DIR = os.path.dirname(os.path.realpath(__file__))
+BASE_DIR = os.path.dirname(TOOL_DIR)
+ROOT_DIR = os.path.dirname(BASE_DIR)
+sys.path.insert(0, os.path.join(ROOT_DIR, "common"))
+sys.dont_write_bytecode = True
+import codemap as cm  # noqa: E402
+
+REPO_DIR = os.environ.get("RUSH00_REPO", os.path.join(BASE_DIR, "repo"))
+REPORT_DIR = os.environ.get("RUSH00_REPORTS", os.path.join(BASE_DIR, "reports"))
+SUBJECT = os.environ.get("RUSH00_SUBJECT", os.path.join(TOOL_DIR, "subject.txt"))
+TEAMS_FILE = os.path.join(REPO_DIR, "teams.txt")
+CC = os.environ.get("CC", "cc")
+
+DEFAULTS = {
+    "dir": "ex00",
+    "files": ["main.c", "ft_putchar.c", "rush0X.c"],
+    "allowed": ["write"],
+    "flags": ["-Wall", "-Wextra", "-Werror"],
+    "function": "rush",
+    "assign": "",
+}
+
+CORE_CASES = [(5, 3), (5, 1), (1, 1), (1, 5), (4, 4), (2, 2), (2, 1), (1, 2),
+              (3, 3), (5, 2), (2, 5), (10, 6), (123, 42)]
+EDGE_CASES = [(0, 0), (0, 4), (4, 0), (-1, 3), (3, -1), (-4, -4),
+              (2147483647, 0), (0, 2147483647), (-2147483648, 3)]
+STRESS_CASES = [(400, 300)]
+PROBE = (6, 5)  # big enough to show all 9 pattern cells
+RUN_TIMEOUT = 4
+SIGNAMES = {-s.value: s.name for s in signal.Signals}
+
+TTY = sys.stdout.isatty()
+
+
+def c(code, s):
+    return f"\033[{code}m{s}\033[0m" if TTY else str(s)
+
+
+OK, BAD, WARN, DIM, BOLD, CYAN = "32", "31", "33", "2", "1", "36"
+
+
+# ==========================================================================
+#  Subject
+# ==========================================================================
+
+EX_HEAD = re.compile(r"rush\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)")
+
+
+class Subject:
+    def __init__(self):
+        self.cfg = dict(DEFAULTS)
+        self.rushes = {}      # n -> {"pattern": 3x3|None, "examples": [(x, y, rows)]}
+        self.loaded = False
+        self.notes = []       # warnings found while reading/deriving
+        self.derived = {}     # n -> {"pattern", "source", "valid_examples", "generate", "notes"}
+
+    # -- reading ------------------------------------------------------------
+    @classmethod
+    def load(cls, path=SUBJECT):
+        s = cls()
+        if os.path.exists(path):
+            with open(path, encoding="utf-8") as f:
+                s.parse(f.read())
+            s.loaded = True
+        s.derive_all()
+        return s
+
+    def parse(self, text):
+        sec, cur = None, None
+        lines = text.split("\n")
+
+        def finish():
+            if cur is not None and sec is not None:
+                rows = _clean_rows(cur["rows"], cur["x"])
+                self.rushes[sec]["examples"].append((cur["x"], cur["y"], rows))
+
+        i = 0
+        while i < len(lines):
+            raw = lines[i].rstrip("\r")
+            s = raw.strip()
+            if cur is not None:
+                if s == "" or EX_HEAD.search(s) or s.startswith("=="):
+                    finish()
+                    cur = None
+                    if s == "":
+                        i += 1
+                    continue
+                if s.startswith("$>"):
+                    i += 1
+                    continue
+                cur["rows"].append(raw)
+                i += 1
+                continue
+            if s == "" or s.startswith("#"):
+                i += 1
+                continue
+            if s.startswith("=="):
+                m = re.search(r"\d+", s)
+                sec = int(m.group()) if m else None
+                if sec is not None:
+                    self.rushes.setdefault(sec, {"pattern": None, "examples": []})
+                i += 1
+                continue
+            m = EX_HEAD.search(s)
+            if m and sec is not None:
+                cur = {"x": int(m.group(1)), "y": int(m.group(2)), "rows": []}
+                i += 1
+                continue
+            if "=" in s:
+                k, v = s.split("=", 1)
+                k, v = k.strip().lower(), v.split(" #")[0].strip()
+                if k == "pattern" and sec is not None:
+                    try:
+                        parts = shlex.split(v)
+                    except ValueError:
+                        parts = []
+                    if len(parts) == 3 and all(len(p) == 3 for p in parts):
+                        self.rushes[sec]["pattern"] = [list(p) for p in parts]
+                    else:
+                        self.notes.append(f"rush{sec:02d}: bad pattern line (want 3 quoted "
+                                          f"3-char rows): {v}")
+                elif k in ("files", "allowed", "flags"):
+                    self.cfg[k] = v.split()
+                elif k in ("function", "dir", "assign"):
+                    self.cfg[k] = v
+            i += 1
+        finish()
+
+    # -- deriving -----------------------------------------------------------
+    def derive_all(self):
+        for n, r in self.rushes.items():
+            self.derived[n] = derive_rush(r["pattern"], r["examples"])
+
+    def expected_for(self, n):
+        d = self.derived.get(n)
+        return d if d and (d["pattern"] or d["valid_examples"]) else None
+
+    def assigned_rush(self, leader):
+        rule = (self.cfg.get("assign") or "").strip().lower()
+        if not leader or not rule:
+            return None
+        if rule in ("leader-mod-5", "leader_mod_5"):
+            ch = leader.strip().lower()[:1]
+            if "a" <= ch <= "z":
+                return (ord(ch) - ord("a") + 1) % 5
+        return None
+
+
+def _clean_rows(rows, x):
+    rows = [r.replace("\t", "    ") for r in rows]
+    # cat -e style paste: drop a trailing '$' on every row
+    if rows and all(r.endswith("$") for r in rows) and any(len(r) - 1 == x for r in rows):
+        rows = [r[:-1] for r in rows]
+    nonblank = [r for r in rows if r.strip()]
+    if nonblank:
+        ind = min(len(r) - len(r.lstrip(" ")) for r in nonblank)
+        rows = [r[ind:] for r in rows]
+    return rows
+
+
+def render(pat, x, y):
+    if x <= 0 or y <= 0:
+        return ""
+    out = []
+    for r in range(y):
+        R = 0 if r == 0 else (2 if r == y - 1 else 1)
+        out.append("".join(pat[R][0 if col == 0 else (2 if col == x - 1 else 1)]
+                           for col in range(x)))
+    return "\n".join(out) + "\n"
+
+
+def derive_pattern(samples):
+    """samples: [(x, y, rows)] -> (3x3 with None holes, conflicts)."""
+    P = [[None] * 3 for _ in range(3)]
+    conflicts = []
+    for x, y, rows in samples:
+        if x <= 0 or y <= 0:
+            continue
+        for ri, row in enumerate(rows):
+            R = 0 if ri == 0 else (2 if ri == len(rows) - 1 else 1)
+            for ci, ch in enumerate(row):
+                C = 0 if ci == 0 else (2 if ci == len(row) - 1 else 1)
+                if P[R][C] is None:
+                    P[R][C] = ch
+                elif P[R][C] != ch:
+                    conflicts.append((R, C, P[R][C], ch, x, y))
+    return P, conflicts
+
+
+def shape_ok(x, y, rows):
+    return len(rows) == y and all(len(r) == x for r in rows)
+
+
+def derive_rush(pattern, examples):
+    notes = []
+    valid = [(x, y, rows) for x, y, rows in examples if shape_ok(x, y, rows)]
+    for x, y, rows in examples:
+        if not shape_ok(x, y, rows):
+            notes.append(f"example rush({x}, {y}) is not {y} rows of {x} chars as pasted "
+                         f"(spaces lost in the copy?) — used only to read the pattern")
+    source = None
+    if pattern:
+        pat, source = pattern, "pattern line"
+    else:
+        pat, conflicts = derive_pattern(examples)
+        for R, C, a, b, x, y in conflicts[:3]:
+            notes.append(f"examples disagree on cell ({R},{C}): {a!r} vs {b!r} (rush({x}, {y}))")
+        if pat[1][1] is None and all(pat[r][k] is not None for r in range(3) for k in range(3)
+                                     if (r, k) != (1, 1)):
+            pat[1][1] = " "
+            notes.append("fill char never shown in the examples — assuming a space")
+        if any(pat[r][k] is None for r in range(3) for k in range(3)) or conflicts:
+            if not conflicts:
+                notes.append("examples don't show every corner/edge — testing the examples only "
+                             "(add a rush(5, 3)-sized example or a pattern = line)")
+            pat = None
+        else:
+            source = "derived from examples"
+    generate = pat is not None
+    if pat:
+        for x, y, rows in valid:
+            if render(pat, x, y) != "\n".join(rows) + "\n":
+                notes.append(f"pattern does not reproduce example rush({x}, {y}) — the subject's "
+                             f"rule differs from the plain rectangle; testing examples only")
+                generate = False
+    return {"pattern": pat, "source": source, "valid_examples": valid,
+            "generate": generate, "notes": notes}
+
+
+TEMPLATE = """\
+# rush00 subject — fill this from the REAL subject of the day.
+# Anything here overrides the tool's built-in core. Without a "== rushNN"
+# section a rush is checked for self-consistency against the team's own
+# output, and its pattern tile is shown for you to compare with the PDF.
+#
+#   rush00 subject today.pdf    fills this file from the PDF (review it!)
+
+dir      = ex00
+files    = main.c ft_putchar.c rush0X.c
+allowed  = write
+flags    = -Wall -Wextra -Werror
+function = rush
+# assign = leader-mod-5    # assigned rush = (leader's first letter, a=1..z=26) % 5
+
+# One section per rush. Paste the subject's examples as they are ("$>./a.out"
+# and "$>" around them are fine), and/or give the 3x3 pattern directly:
+#   'top-left top top-right' 'left fill right' 'bottom-left bottom bottom-right'
+#
+# == rush00
+# pattern = 'ABC' 'D E' 'FGH'
+# rush(5, 3)
+# ABBBC
+# D   E
+# FGGGH
+"""
+
+
+def cmd_init():
+    if os.path.exists(SUBJECT):
+        print(f"{SUBJECT} already exists — not overwriting")
+        return 1
+    with open(SUBJECT, "w") as f:
+        f.write(TEMPLATE)
+    print(f"wrote {SUBJECT}")
+    return 0
+
+
+def extract_from_pdf_text(text):
+    """Best-effort: find 'Rush 0N' chapter titles and the rush(x, y) examples after them."""
+    sections = {}
+    sec = None
+    lines = text.split("\n")
+    i = 0
+    while i < len(lines):
+        s = lines[i].strip()
+        m = re.fullmatch(r"(?:Chapter\s+\w+\s+)?Rush\s*0?(\d)", s)
+        if m:
+            sec = int(m.group(1))
+            sections.setdefault(sec, [])
+            i += 1
+            continue
+        mh = EX_HEAD.search(s)
+        if mh and sec is not None:
+            j = i + 1
+            while j < len(lines) and j < i + 4 and "a.out" not in lines[j] \
+                    and not lines[j].strip().startswith("$>"):
+                j += 1
+            if j < len(lines) and ("a.out" in lines[j] or lines[j].strip().startswith("$>")):
+                rows, k = [], j + 1
+                while k < len(lines) and not lines[k].strip().startswith("$>") and k < j + 200:
+                    if lines[k].strip():
+                        rows.append(lines[k].rstrip())
+                    k += 1
+                sections[sec].append((int(mh.group(1)), int(mh.group(2)), rows))
+                i = k + 1
+                continue
+        i += 1
+    return sections
+
+
+def subject_text_from_pdf(path, label=None):
+    """Build subject.txt text from a PDF. Raises ValueError with a readable reason."""
+    if not shutil.which("pdftotext"):
+        raise ValueError("pdftotext not found (poppler) — paste the examples by hand")
+    text = subprocess.run(["pdftotext", "-layout", path, "-"], capture_output=True,
+                          text=True).stdout
+    found = extract_from_pdf_text(text)
+    if not found:
+        raise ValueError("could not find any 'Rush 0N' sections with rush(x, y) examples in that PDF")
+    label = label or os.path.basename(path)
+    if True:
+        out = [TEMPLATE.split("# One section per rush.")[0].rstrip(), "",
+               f"# extracted from {label} on {time.strftime('%Y-%m-%d %H:%M')}"
+               " — check every block below against the PDF", ""]
+        for n in sorted(found):
+            d = derive_rush(None, [(x, y, _clean_rows(r, x)) for x, y, r in found[n]])
+            out.append(f"== rush{n:02d}")
+            if d["pattern"]:
+                p = d["pattern"]
+                out.append("pattern = " + " ".join("'" + "".join(r) + "'" for r in p)
+                           + "   # " + (d["source"] or ""))
+            for note in d["notes"]:
+                out.append("# note: " + note)
+            for x, y, rows in found[n]:
+                out.append(f"rush({x}, {y})")
+                out.extend(rows)
+                out.append("")
+            out.append("")
+    return "\n".join(out)
+
+
+def save_subject(text):
+    """Write subject.txt, keeping the previous one as a timestamped .bak."""
+    bak = None
+    if os.path.exists(SUBJECT):
+        bak = SUBJECT + time.strftime(".%Y%m%d-%H%M%S.bak")
+        shutil.copy(SUBJECT, bak)
+    with open(SUBJECT, "w", encoding="utf-8") as f:
+        f.write(text)
+    return bak
+
+
+def cmd_subject(path):
+    if path.lower().endswith(".pdf"):
+        try:
+            text_out = subject_text_from_pdf(path)
+        except ValueError as e:
+            print(e)
+            return 1
+    else:
+        with open(path, encoding="utf-8") as f:
+            text_out = f.read()
+    bak = save_subject(text_out)
+    if bak:
+        print(c(DIM, f"old subject saved as {bak}"))
+    s = Subject.load()
+    print(f"wrote {SUBJECT}\n")
+    print_subject(s)
+    return 0
+
+
+def print_subject(s):
+    for k in ("dir", "files", "allowed", "flags", "function", "assign"):
+        v = s.cfg[k]
+        print(f"  {k:9}= {' '.join(v) if isinstance(v, list) else (v or '-')}")
+    if not s.rushes:
+        print(c(WARN, "  no rush sections — every rush will be self-checked only"))
+    for n in sorted(s.rushes):
+        d = s.derived[n]
+        pat = d["pattern"]
+        tile = " ".join("".join(r) for r in pat) if pat else "?"
+        flag = c(OK, "generates tests") if d["generate"] else c(WARN, "examples only")
+        print(f"  rush{n:02d}  [{tile}]  {len(d['valid_examples'])} example(s)  {flag}")
+        for note in d["notes"]:
+            print(c(WARN, f"          ! {note}"))
+
+
+# ==========================================================================
+#  Running things
+# ==========================================================================
+
+ANSI = re.compile(r"\x1b\[[0-9;]*m")
+
+
+def run(cmd, cwd=None, timeout=60):
+    try:
+        p = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=timeout,
+                           errors="replace")
+        return p.returncode, ANSI.sub("", p.stdout), ANSI.sub("", p.stderr)
+    except subprocess.TimeoutExpired:
+        return None, "", "timed out"
+    except OSError as e:
+        return None, "", str(e)
+
+
+def run_capped(cmd, cwd, timeout=RUN_TIMEOUT, cap=2_000_000):
+    with tempfile.TemporaryFile() as out:
+        timed_out = False
+        try:
+            p = subprocess.run(cmd, cwd=cwd, stdout=out, stderr=subprocess.PIPE,
+                               stdin=subprocess.DEVNULL, timeout=timeout)
+            rc, err = p.returncode, p.stderr
+        except subprocess.TimeoutExpired as e:
+            rc, err, timed_out = None, e.stderr or b"", True
+        size = out.seek(0, 2)
+        out.seek(0)
+        data = out.read(cap)
+    return {"rc": rc, "timeout": timed_out, "size": size,
+            "out": data.decode("latin-1"), "err": err.decode("utf-8", "replace")[:2000]}
+
+
+def crash_text(r):
+    if r["timeout"]:
+        return f"timeout after {RUN_TIMEOUT}s ({r['size']:,} bytes printed)"
+    if r["rc"] is not None and r["rc"] < 0:
+        return "crashed: " + SIGNAMES.get(r["rc"], f"signal {-r['rc']}")
+    return ""
+
+
+# ==========================================================================
+#  One team
+# ==========================================================================
+
+RUSH_FILE = re.compile(r"^rush(\d\d)\.c$")
+
+
+def file_regex(name):
+    return re.compile("^" + re.escape(name).replace("X", r"\d") + "$")
+
+
+def find_ex_dir(team, want):
+    cands = []
+    for dp, dns, fns in os.walk(team):
+        dns[:] = sorted(d for d in dns if not d.startswith("."))
+        if os.path.relpath(dp, team).count(os.sep) > 3:
+            dns[:] = []
+            continue
+        if any(RUSH_FILE.match(f) for f in fns):
+            cands.append(dp)
+    if not cands:
+        return None
+    cands.sort(key=lambda d: (os.path.basename(d) != want, d.count(os.sep), d))
+    return cands[0]
+
+
+def save_team_meta(name, leader=None, rush=None):
+    """Set (or clear, with empty values) one team's leader/rush in repo/teams.txt."""
+    meta = load_teams_file()
+    d = meta.setdefault(name, {})
+    for k, v in (("leader", leader), ("rush", rush)):
+        if v is None:
+            continue
+        if str(v).strip() == "":
+            d.pop(k, None)
+        else:
+            d[k] = str(v).strip()
+    os.makedirs(REPO_DIR, exist_ok=True)
+    with open(TEAMS_FILE, "w", encoding="utf-8") as f:
+        f.write("# team  leader=LOGIN  rush=N   (read by rush00)\n")
+        for t, kv in sorted(meta.items()):
+            if kv:
+                f.write(t + "  " + "  ".join(f"{k}={v}" for k, v in sorted(kv.items())) + "\n")
+
+
+def load_teams_file():
+    meta = {}
+    if os.path.exists(TEAMS_FILE):
+        for ln in open(TEAMS_FILE, encoding="utf-8"):
+            ln = ln.split("#")[0].split()
+            if not ln:
+                continue
+            d = {}
+            for kv in ln[1:]:
+                if "=" in kv:
+                    k, v = kv.split("=", 1)
+                    d[k] = v
+            meta[ln[0]] = d
+    return meta
+
+
+class Team:
+    def __init__(self, path, subject, leader=None, rush=None, norm=True):
+        self.path = os.path.realpath(path)
+        self.name = os.path.basename(self.path.rstrip("/"))
+        self.S = subject
+        self.cfg = subject.cfg
+        self.norm_enabled = norm
+        self.leader = leader
+        self.assigned = rush
+        self.assigned_why = "given with --rush" if rush is not None else ""
+        self.checks = []          # (label, status, detail_html, detail_text)
+        self.rush_results = {}    # n -> dict
+        self.norm = {}
+        self.forbidden = []
+        self.parsed = []
+        self.git_authors = None
+        self.ex = None
+        self.work = tempfile.mkdtemp(prefix=f"rush00-{self.name}-")
+
+    def check(self, label, status, html="", text=""):
+        self.checks.append((label, status, html, text))
+
+    # ------------------------------------------------------------------
+    def evaluate(self):
+        self.ex = find_ex_dir(self.path, self.cfg["dir"])
+        if not self.ex:
+            self.check("Turn-in", "bad", "", "no rushNN.c anywhere in this folder")
+            return self
+        self.files = sorted(f for f in os.listdir(self.ex) if os.path.isfile(os.path.join(self.ex, f)))
+        self.cfiles = [f for f in self.files if f.endswith(".c")]
+        self.rush_files = sorted(f for f in self.cfiles if RUSH_FILE.match(f))
+        self.helpers = [f for f in self.cfiles if f not in self.rush_files
+                        and f not in ("main.c", "ft_putchar.c")]
+        self._turn_in()
+        self._parse()
+        self._norm()
+        self._forbidden()
+        self._pick_assigned()
+        for rf in self.rush_files:
+            self.rush_results[int(RUSH_FILE.match(rf).group(1))] = self._rush(rf)
+        self._summary_checks()
+        return self
+
+    def _turn_in(self):
+        rel = os.path.relpath(self.ex, self.path)
+        want = self.cfg["dir"]
+        regs = [file_regex(f) for f in self.cfg["files"]]
+        missing = [f for f, r in zip(self.cfg["files"], regs)
+                   if not any(r.match(x) for x in self.files)]
+        extra = [f for f in self.files if not any(r.match(f) for r in regs)]
+        notes = []
+        status = "ok"
+        if os.path.basename(self.ex) != want:
+            notes.append(f"files are in <code>{cm.esc(rel)}/</code>, not <code>{cm.esc(want)}/</code>")
+            status = "bad"
+        if missing:
+            notes.append("missing: " + ", ".join(f"<code>{cm.esc(m)}</code>" for m in missing))
+            status = "bad"
+        if extra:
+            notes.append("extra files: " + ", ".join(f"<code>{cm.esc(e)}</code>" for e in extra))
+            status = "warn" if status == "ok" else status
+        top = [f for f in os.listdir(self.path) if not f.startswith(".")
+               and os.path.join(self.path, f) != self.ex
+               and not self.ex.startswith(os.path.join(self.path, f) + os.sep)]
+        if top:
+            notes.append("also at repo root: " + ", ".join(f"<code>{cm.esc(t)}</code>" for t in top))
+        listing = " ".join(f"<code>{cm.esc(f)}</code>" for f in self.files)
+        self.check("Turn-in files", status,
+                   f"<div><code>{cm.esc(rel)}/</code> → {listing}</div>"
+                   + "".join(f"<div>{n}</div>" for n in notes),
+                   "; ".join(re.sub("<[^>]+>", "", n) for n in notes) or f"{rel}/ ok")
+
+    def _parse(self):
+        for f in self.cfiles + [f for f in self.files if f.endswith(".h")]:
+            self.parsed.append(cm.parse_file(os.path.join(self.ex, f)))
+        self.git_authors = cm.attach_authors(self.parsed, self.path)
+
+    def _norm(self):
+        if not self.norm_enabled:
+            self.check("Norminette", "na", "", "skipped (--no-norm)")
+            return
+        if not shutil.which("norminette"):
+            self.check("Norminette", "na", "", "norminette not installed")
+            return
+        files = [f for f in self.files if f.endswith((".c", ".h"))]
+        rc, out, err = run(["norminette", "-R", "CheckForbiddenSourceHeader"] + files, cwd=self.ex)
+        if rc not in (0, 1) or "usage" in (out + err).lower()[:200]:
+            rc, out, err = run(["norminette"] + files, cwd=self.ex)
+        cur = None
+        per = {f: {"ok": None, "errors": []} for f in files}
+        for ln in out.splitlines():
+            m = re.match(r"^(.+?): (OK|Error)!", ln)
+            if m:
+                cur = m.group(1)
+                per.setdefault(cur, {"ok": None, "errors": []})["ok"] = m.group(2) == "OK"
+                continue
+            m = re.match(r"^\s*Error:\s*(\S+)\s*\(line:\s*(\d+),\s*col:\s*(\d+)\):\s*(.*)", ln)
+            if m and cur:
+                per[cur]["errors"].append((int(m.group(2)), int(m.group(3)), m.group(1), m.group(4).strip()))
+            elif ln.strip().startswith("Error") and cur:
+                per[cur]["errors"].append((0, 0, "", ln.strip()))
+        self.norm = per
+        nerr = sum(len(v["errors"]) for v in per.values())
+        bad = [f for f, v in per.items() if v["ok"] is False]
+        rows = []
+        for f, v in per.items():
+            st = "✓" if v["ok"] else ("✗" if v["ok"] is False else "?")
+            errs = "".join(f"<div class=dim><a href=\"#{_fid(f)}-L{l}\">L{l}:{col}</a> "
+                           f"<code>{cm.esc(code)}</code> {cm.esc(msg)}</div>"
+                           for l, col, code, msg in v["errors"][:12])
+            more = f"<div class=dim>… {len(v['errors']) - 12} more</div>" if len(v["errors"]) > 12 else ""
+            rows.append(f"<div><b>{st}</b> <code>{cm.esc(f)}</code>{errs}{more}</div>")
+        self.check("Norminette", "bad" if bad else ("ok" if per else "na"), "".join(rows),
+                   f"{nerr} error(s) in {', '.join(bad)}" if bad else "all files OK")
+
+    def _forbidden(self):
+        allowed = set(self.cfg["allowed"])
+        objdir = os.path.join(self.work, "obj")
+        os.makedirs(objdir, exist_ok=True)
+        undefined, defined, fails = {}, set(), []
+        for f in self.cfiles:
+            o = os.path.join(objdir, f + ".o")
+            rc, _, err = run([CC, "-c", "-w", os.path.join(self.ex, f), "-o", o])
+            if rc != 0:
+                rc, _, err = run([CC, "-c", "-w", "-fpermissive", os.path.join(self.ex, f), "-o", o])
+            if rc != 0:
+                fails.append(f)
+                continue
+            _, out, _ = run(["nm", "-u", o])
+            for ln in out.split("\n"):
+                sym = ln.split()[-1] if ln.split() else ""
+                if sym:
+                    undefined.setdefault(sym, []).append(f)
+            _, out, _ = run(["nm", "--defined-only", o])
+            defined.update(ln.split()[-1] for ln in out.split("\n") if ln.split())
+        internal = re.compile(r"^(_GLOBAL_OFFSET_TABLE_|__stack_chk_fail|__stack_chk_guard|_?_?main)$")
+        mine = {f.name for P in self.parsed for f in P.funcs} | set(allowed)
+        found = {s: fs for s, fs in undefined.items()
+                 if s not in defined and s not in mine and not internal.match(s)}
+        # also what the source calls (the compiler may turn printf("\n") into putchar)
+        protos = {p for P in self.parsed for p in P.protos}
+        for P in self.parsed:
+            for fn in P.funcs:
+                for name, line in fn.calls:
+                    if name not in mine and not (name in protos and name not in undefined):
+                        found.setdefault(name, [])
+                        loc = f"{P.name}:{line}"
+                        if loc not in found[name]:
+                            found[name].append(loc)
+        self.forbidden = sorted(found.items())
+        headers = sorted({inc for P in self.parsed for inc in P.includes})
+        hdr = (" · includes " + ", ".join(f"<code>{cm.esc(h)}</code>" for h in headers)) if headers else ""
+        if self.forbidden:
+            self.check("Forbidden functions", "bad",
+                       ", ".join(f"<code>{cm.esc(s)}</code> in {cm.esc(', '.join(fs))}"
+                                 for s, fs in self.forbidden) + hdr,
+                       "uses " + ", ".join(s for s, _ in self.forbidden))
+        elif fails:
+            self.check("Forbidden functions", "warn", f"could not compile {', '.join(fails)}" + hdr,
+                       f"could not compile {', '.join(fails)}")
+        else:
+            self.check("Forbidden functions", "ok",
+                       "only " + ", ".join(f"<code>{cm.esc(a)}</code>" for a in sorted(allowed)) + hdr,
+                       "only " + ", ".join(sorted(allowed)))
+
+    def _pick_assigned(self):
+        nums = [int(RUSH_FILE.match(f).group(1)) for f in self.rush_files]
+        if self.assigned is None and self.leader:
+            a = self.S.assigned_rush(self.leader)
+            if a is not None:
+                self.assigned = a
+                self.assigned_why = f"leader {self.leader} → rule {self.cfg['assign']}"
+        if self.assigned is None and len(nums) == 1:
+            self.assigned = nums[0]
+            self.assigned_why = "only rush file turned in"
+        if self.assigned is not None and self.assigned not in nums:
+            self.check("Assigned rush", "bad", "",
+                       f"rush{self.assigned:02d}.c is not in the turn-in ({self.assigned_why})")
+
+    # ------------------------------------------------------------------
+    def _entry(self, rf):
+        P = next(p for p in self.parsed if p.name == rf)
+        two = [f for f in P.funcs if len(f.params) == 2
+               and all(re.match(r"^(const\s+)?int\b", p) for p in f.params)]
+        want = self.cfg["function"]
+        stem = rf[:-2]
+        for pick in ([f for f in two if f.name == want], [f for f in two if f.name == stem], two,
+                     [f for f in P.funcs if f.name in (want, stem)]):
+            if pick:
+                called = {c for p in self.parsed if p.name == rf for fn in p.funcs for c in fn.callees()}
+                roots = [f for f in pick if f.name not in called] or pick
+                return roots[0]
+        return None
+
+    def _rush(self, rf):
+        n = int(RUSH_FILE.match(rf).group(1))
+        R = {"file": rf, "n": n, "entry": None, "official": None, "own": None,
+             "tests": [], "probe": None, "mode": None, "pattern": None, "notes": []}
+        entry = self._entry(rf)
+        if not entry:
+            R["notes"].append("no rush(int x, int y)-shaped function found")
+            return R
+        R["entry"] = entry.name
+        if entry.name != self.cfg["function"]:
+            R["notes"].append(f"entry function is <code>{cm.esc(entry.name)}</code>, subject asks for "
+                              f"<code>{cm.esc(self.cfg['function'])}</code>")
+        d = os.path.join(self.work, f"rush{n:02d}")
+        os.makedirs(d, exist_ok=True)
+        R["official"] = self._official_build(rf, d)
+        R["own"] = self._own_main_run(R, entry, d) if R["official"]["ok"] else None
+        h = self._harness_build(rf, entry.name, d)
+        R["harness"] = h
+        if not h["ok"]:
+            R["notes"].append("could not build the test harness")
+            return R
+        exe = h["exe"]
+        probe = run_capped([exe, str(PROBE[0]), str(PROBE[1])], d)
+        prows = probe["out"].split("\n")[:-1] if probe["out"].endswith("\n") else probe["out"].split("\n")
+        R["probe"] = probe
+        inferred, conf = derive_pattern([(PROBE[0], PROBE[1], prows)])
+        theirs = inferred if shape_ok(PROBE[0], PROBE[1], prows) and not conf \
+            and all(ch is not None for row in inferred for ch in row) else None
+        R["theirs"] = theirs
+        spec = self.S.expected_for(n)
+        if spec:
+            R["mode"] = "subject"
+            R["pattern"] = spec["pattern"]
+            R["notes"].extend(spec["notes"])
+        elif theirs:
+            R["mode"] = "self"
+            R["pattern"] = theirs
+        else:
+            R["mode"] = "shape"
+        cases = []
+        if spec:
+            for x, y, rows in spec["valid_examples"]:
+                cases.append((x, y, "subject", "\n".join(rows) + "\n"))
+        gen_pat = (spec["pattern"] if spec and spec["generate"] else None) if spec else theirs
+        seen = {(x, y) for x, y, _, _ in cases}
+        for x, y in CORE_CASES:
+            if (x, y) not in seen:
+                cases.append((x, y, "core", render(gen_pat, x, y) if gen_pat else None))
+        for x, y in EDGE_CASES:
+            cases.append((x, y, "edge", ""))
+        for x, y in STRESS_CASES:
+            cases.append((x, y, "stress", render(gen_pat, x, y) if gen_pat else None))
+        for x, y, cat, exp in cases:
+            r = run_capped([exe, str(x), str(y)], d)
+            R["tests"].append(judge(x, y, cat, exp, r))
+        return R
+
+    def _official_build(self, rf, d):
+        srcs = [f for f in ("main.c", "ft_putchar.c") if f in self.files] + [rf] + self.helpers
+        exe = os.path.join(d, "a.out")
+        cmd = [CC] + self.cfg["flags"] + srcs + ["-o", exe]
+        rc, out, err = run(cmd, cwd=self.ex)
+        res = {"ok": rc == 0, "cmd": " ".join([CC] + self.cfg["flags"] + srcs),
+               "log": (out + err).strip(), "exe": exe, "whole": False}
+        if rc != 0 and len(self.rush_files) > 1 and "undefined reference" in err:
+            # their main.c calls several rushNN() at once: try the whole folder together
+            allc = self.cfiles
+            rc2, out2, err2 = run([CC] + self.cfg["flags"] + allc + ["-o", exe], cwd=self.ex)
+            if rc2 == 0:
+                res.update(ok=True, whole=True, cmd=" ".join([CC] + self.cfg["flags"] + allc),
+                           log=f"alone it fails ({first_error(err)});\nbuilds only with every file together")
+        return res
+
+    def _own_main_run(self, R, entry, d):
+        r = run_capped([R["official"]["exe"]], d)
+        main = next((f for P in self.parsed if P.name == "main.c" for f in P.funcs if f.name == "main"), None)
+        calls = []
+        if main:
+            P = next(p for p in self.parsed if p.name == "main.c")
+            body = P.src[P.toks[0].s:] if P.toks else ""
+            lines = P.src.split("\n")[main.open_line - 1:main.close_line]
+            body = "\n".join(lines)
+            for m in re.finditer(r"\b" + re.escape(entry.name) + r"\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)", body):
+                calls.append((int(m.group(1)), int(m.group(2))))
+        return {"run": r, "calls": calls}
+
+    def _harness_build(self, rf, entry, d):
+        hc = os.path.join(d, "__harness.c")
+        with open(hc, "w") as f:
+            f.write("#include <stdlib.h>\n"
+                    f"void {entry}(int x, int y);\n"
+                    "int main(int ac, char **av)\n{\n"
+                    f"\tif (ac < 3)\n\t\treturn (2);\n\t{entry}(atoi(av[1]), atoi(av[2]));\n"
+                    "\treturn (0);\n}\n")
+        srcs = [f for f in ("ft_putchar.c",) if f in self.files] + [rf] + self.helpers
+        objs, log = [], []
+        sect = ["-ffunction-sections", "-fdata-sections", "-w"]
+        for s in srcs + (["main.c"] if "main.c" in self.files else []):
+            o = os.path.join(d, s + ".h.o")
+            extra = ["-Dmain=__rush_student_main"] if s == "main.c" else []
+            rc, out, err = run([CC, "-c"] + sect + extra + [os.path.join(self.ex, s), "-o", o])
+            if rc != 0:  # e.g. implicit write() is a hard error on gcc >= 14: still show the output
+                rc, out, err = run([CC, "-c", "-fpermissive"] + sect + extra
+                                   + [os.path.join(self.ex, s), "-o", o])
+            if rc != 0:
+                log.append(err)
+                if s != "main.c":
+                    return {"ok": False, "log": "\n".join(log)}
+                continue
+            objs.append(o)
+        ho = os.path.join(d, "__harness.o")
+        run([CC, "-c", "-w", hc, "-o", ho])
+        exe = os.path.join(d, "harness")
+        rc, out, err = run([CC, "-Wl,--gc-sections", ho] + objs + ["-o", exe])
+        if rc != 0 and any(o.endswith("main.c.h.o") for o in objs):
+            objs = [o for o in objs if not o.endswith("main.c.h.o")]
+            rc, out, err = run([CC, "-Wl,--gc-sections", ho] + objs + ["-o", exe])
+        return {"ok": rc == 0, "exe": exe, "log": ("\n".join(log) + err).strip()}
+
+    # ------------------------------------------------------------------
+    def _summary_checks(self):
+        rank = {"ok": 0, "na": 0, "warn": 1, "bad": 2}
+        for n, R in sorted(self.rush_results.items()):
+            tag = f"rush{n:02d}" + (" (assigned)" if n == self.assigned else
+                                    " (bonus)" if self.assigned is not None else "")
+            off = R["official"]
+            notes_txt = [re.sub("<[^>]+>", "", x) for x in R["notes"]]
+            if off is None:
+                self.check(tag, "bad", "<br>".join(R["notes"]), "; ".join(notes_txt))
+                continue
+            flags = " ".join(self.cfg["flags"])
+            if off["whole"]:
+                b_st, b_txt = "warn", "builds only with every rush file together"
+            elif off["ok"]:
+                b_st, b_txt = "ok", f"builds with {flags}"
+            else:
+                b_st, b_txt = "bad", "build fails: " + first_error(off["log"])
+            core = [t for t in R["tests"] if t["cat"] in ("subject", "core")]
+            judged = [t for t in core if t["ok"] is not None]
+            passed = sum(1 for t in judged if t["ok"])
+            mode = {"subject": "vs subject", "self": "vs their own pattern (no subject)",
+                    "shape": "shape only", None: ""}[R["mode"]]
+            if not R["tests"]:
+                o_st, o_txt = "bad", "not tested"
+            else:
+                o_st = "ok" if judged and passed == len(judged) else "bad"
+                if o_st == "ok" and R["mode"] != "subject":
+                    o_st = "warn"
+                o_txt = f"{passed}/{len(judged)} core cases {mode}"
+            st = max([b_st, o_st] + (["warn"] if R["notes"] else []), key=rank.get)
+            html_ = (f'<div><span class="st {b_st}">{"✓" if b_st == "ok" else "!" if b_st == "warn" else "✗"}</span> '
+                     f'{cm.esc(b_txt)} <details style="display:inline"><summary class=dim style="display:inline">'
+                     f'cmd</summary><code>{cm.esc(off["cmd"])}</code>'
+                     + (f'<pre class=log>{cm.esc(off["log"])}</pre>' if off["log"] else "")
+                     + f'</details></div><div><span class="st {o_st}">{"✓" if o_st == "ok" else "!" if o_st == "warn" else "✗"}</span> '
+                     f'<a href="#output">{cm.esc(o_txt)}</a></div>'
+                     + "".join(f'<div class="dim">⚠ {nt}</div>' for nt in R["notes"]))
+            self.check(tag, st, html_, " · ".join([b_txt, o_txt] + notes_txt))
+
+    def verdict(self):
+        n = self.assigned
+        if n is None and len(self.rush_results) > 1:
+            return "warn", "ASSIGNED RUSH UNKNOWN"
+        hard = [x for x in self.checks if x[1] == "bad"
+                and (n is None or "rush" not in x[0][:4] or x[0].startswith(f"rush{n:02d}"))]
+        if not self.ex:
+            return "bad", "NOTHING TO GRADE"
+        if hard:
+            return "bad", "FAIL"
+        R = self.rush_results.get(n) if n is not None else None
+        if R and R["mode"] != "subject":
+            return "warn", "PASS? (check pattern vs PDF)"
+        return "ok", "PASS"
+
+    def summary(self):
+        v = self.verdict()
+        rushes = {}
+        for n, R in self.rush_results.items():
+            core = [t for t in R["tests"] if t["cat"] in ("subject", "core") and t["ok"] is not None]
+            rushes[n] = {"build": bool(R["official"] and R["official"]["ok"]),
+                         "core": [sum(t["ok"] for t in core), len(core)], "mode": R["mode"],
+                         "theirs": ["".join(r) for r in R["theirs"]] if R.get("theirs") else None,
+                         "entry": R["entry"]}
+        return {"team": self.name, "path": self.path, "verdict": v, "assigned": self.assigned,
+                "assigned_why": self.assigned_why, "leader": self.leader,
+                "norm_ok": all(x["ok"] for x in self.norm.values()) if self.norm else None,
+                "forbidden": [s for s, _ in self.forbidden], "rushes": rushes,
+                "checks": [(a, b, d) for a, b, _, d in self.checks],
+                "time": time.strftime("%Y-%m-%d %H:%M")}
+
+    def cleanup(self):
+        shutil.rmtree(self.work, ignore_errors=True)
+
+
+def _fid(fname):
+    return "src-" + re.sub(r"[^A-Za-z0-9]", "-", fname)
+
+
+def first_error(log):
+    lines = [l for l in log.split("\n") if l.strip()]
+    for l in sorted(lines, key=lambda l: (l.startswith("collect2"),
+                                          not re.search(r"undefined reference|multiple definition", l))):
+        if re.search(r"error|undefined reference|multiple definition", l, re.I):
+            return re.sub(r"^/usr/bin/ld: (/tmp/\S+: )?", "", l).strip()[:160]
+    return (lines[0] if lines else "")[:160]
+
+
+def judge(x, y, cat, exp, r):
+    got = r["out"]
+    t = {"x": x, "y": y, "cat": cat, "exp": exp, "got": got, "size": r["size"],
+         "crash": crash_text(r), "ok": None, "why": ""}
+    if t["crash"]:
+        t["ok"] = False
+        t["why"] = t["crash"]
+        if cat == "edge" and r["timeout"]:
+            t["why"] += " — probably loops over x even when y is 0 (or vice versa)"
+        return t
+    if r["size"] > len(got):
+        got = None
+    if exp is None:
+        # no reference: at least the shape must be right
+        rows = got.split("\n") if got is not None else []
+        if rows and rows[-1] == "":
+            rows.pop()
+        t["ok"] = got is not None and got.endswith("\n") and shape_ok(x, y, rows)
+        t["why"] = "" if t["ok"] else f"expected {y} rows of {x} chars"
+        return t
+    if got is None:
+        t["ok"] = False
+        t["why"] = f"printed {r['size']:,} bytes, expected {len(exp):,}"
+        return t
+    t["ok"] = got == exp
+    if not t["ok"]:
+        t["why"] = diff_text(exp, got)
+    return t
+
+
+def _rows(s):
+    rows = s.split("\n")
+    if rows and rows[-1] == "":
+        rows.pop()
+    return rows
+
+
+def diff_text(exp, got):
+    if exp == "" and got:
+        return f"expected no output, got {len(got)} bytes"
+    if got == "":
+        return "printed nothing"
+    e, g = _rows(exp), _rows(got)
+    for r in range(max(len(e), len(g))):
+        a = e[r] if r < len(e) else None
+        b = g[r] if r < len(g) else None
+        if a != b:
+            if a is None:
+                return f"extra row {r + 1}: {b[:40]!r}"
+            if b is None:
+                return f"missing row {r + 1} (got {len(g)} rows, want {len(e)})"
+            for col in range(max(len(a), len(b))):
+                ca = a[col] if col < len(a) else None
+                cb = b[col] if col < len(b) else None
+                if ca != cb:
+                    return (f"row {r + 1} col {col + 1}: want {ca!r} got {cb!r}"
+                            if ca and cb else f"row {r + 1}: width {len(b)}, want {len(a)}")
+    if exp.endswith("\n") and not got.endswith("\n"):
+        return "missing the final newline"
+    return "differs"
+
+
+# ==========================================================================
+#  HTML report
+# ==========================================================================
+
+EXTRA_CSS = r"""
+.verdict{font-size:12px;padding:5px 16px;margin-bottom:8px}
+.kv{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.tabs button{font:600 12.5px var(--mono);padding:4px 12px}
+.tabs button.on{background:var(--ink);color:var(--bg)}
+.tabs button .s{margin-left:6px}
+.tiles{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;margin:4px 0 14px}
+.tile{display:grid;grid-template-columns:repeat(3,30px);gap:3px}
+.tile span{display:flex;align-items:center;justify-content:center;height:30px;background:var(--code);border:1px solid var(--line);border-radius:7px;font:700 16px var(--mono)}
+.tile span.bad{background:color-mix(in srgb,var(--bad) 30%,transparent)}
+.tilebox .cap{font-size:11px;color:var(--dim);margin-top:4px;text-transform:uppercase;letter-spacing:.05em}
+.tests{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.tcase{background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:10px 12px;min-width:0;box-shadow:inset 0 1px 0 var(--rim)}
+.tcase.bad{border-color:color-mix(in srgb,var(--bad) 60%,var(--line))}
+.tcase.wide{grid-column:1/-1}
+.th{display:flex;gap:8px;align-items:baseline;margin-bottom:4px}
+.th code{font-weight:700}
+.th .cat{margin-left:auto;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--dim)}
+.why{font-size:12px;color:var(--bad);margin:2px 0 4px}
+.grids{display:flex;flex-wrap:wrap;gap:12px}
+.gridbox{min-width:0;max-width:100%}
+.gridbox .cap{font-size:10.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em}
+.grid{font-size:13px;line-height:1.15;background:var(--code);border:1px solid var(--line);border-radius:8px;padding:6px 8px;overflow:auto;max-height:340px;white-space:pre}
+.grid.small{font-size:6px;line-height:1}
+.grid .sp{color:color-mix(in srgb,var(--dim) 45%,transparent)}
+.grid .eol{color:color-mix(in srgb,var(--dim) 60%,transparent)}
+.grid .b{background:color-mix(in srgb,var(--bad) 45%,transparent);color:var(--ink);border-radius:2px}
+.grid .m{background:color-mix(in srgb,var(--warn) 40%,transparent);border-radius:2px}
+.grid .np{color:var(--bad)}
+.empty{font-size:12px;color:var(--dim);font-style:italic}
+ol.qs li{margin:6px 0}
+.subnote{font-size:12px;color:var(--dim);margin:6px 0}
+.cons{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.cons .tilebox .cap{max-width:220px}
+"""
+
+
+def grid_html(text, other=None, role="got", crop=None):
+    """Render text as a char grid. other: the text to compare against (marks cells)."""
+    rows = _rows(text)
+    orows = _rows(other) if other is not None else None
+    r0, r1, c0, c1 = crop or (0, len(rows), 0, max((len(r) for r in rows), default=0))
+    out = []
+    for ri in range(r0, min(r1, len(rows))):
+        row = rows[ri]
+        orow = orows[ri] if orows is not None and ri < len(orows) else None
+        cells = []
+        for ci in range(c0, min(c1, len(row))):
+            ch = row[ci]
+            disp = "·" if ch == " " else (ch if ch.isprintable() else "?")
+            cls = "sp" if ch == " " else ("np" if not ch.isprintable() else "")
+            if orows is not None and (orow is None or ci >= len(orow) or orow[ci] != ch):
+                cls = "b" if role == "got" else "m"
+            cells.append(f'<span class="{cls}">{cm.esc(disp)}</span>' if cls else cm.esc(disp))
+        last = ri == len(rows) - 1
+        eol = "" if (last and not text.endswith("\n")) else '<span class="eol">$</span>'
+        out.append("".join(cells) + eol)
+    return "\n".join(out)
+
+
+def test_card(t):
+    x, y, cat = t["x"], t["y"], t["cat"]
+    ok = t["ok"]
+    st = '<span class="st ok">✓</span>' if ok else '<span class="st bad">✗</span>'
+    if cat == "edge" and not ok:
+        st = '<span class="st warn">!</span>'
+    got, exp = t["got"], t["exp"]
+    big = y > 30 or x > 60
+    cls = "tcase" + (" bad" if not ok and cat != "edge" else "") + (" wide" if big and not ok else "")
+    head = (f'<div class="th"><code>rush({x}, {y})</code>{st}'
+            f'<span class="cat">{cm.esc(cat)}</span></div>')
+    why = f'<div class="why">{cm.esc(t["why"])}</div>' if t["why"] else ""
+    if cat == "stress":
+        body = (f'<div class="subnote">{t["size"]:,} bytes printed'
+                + (", matches" if ok else "") + "</div>")
+        return f'<div class="{cls}">{head}{why}{body}</div>'
+    if not got:
+        body = '<div class="empty">(no output)</div>'
+        return f'<div class="{cls}">{head}{why}{body}</div>'
+    crop = None
+    if big:
+        if ok:
+            body = (f'<div class="grid small">{grid_html(got)}</div>')
+            return f'<div class="{cls}">{head}{body}</div>'
+        e, g = _rows(exp or ""), _rows(got)
+        fr = next((i for i in range(max(len(e), len(g)))
+                   if (e[i] if i < len(e) else None) != (g[i] if i < len(g) else None)), 0)
+        fc = 0
+        if fr < len(e) and fr < len(g):
+            fc = next((i for i in range(max(len(e[fr]), len(g[fr])))
+                       if (e[fr][i:i + 1]) != (g[fr][i:i + 1])), 0)
+        crop = (max(fr - 3, 0), fr + 6, max(fc - 12, 0), fc + 40)
+    if ok or exp is None:
+        body = f'<div class="grids"><div class="gridbox"><div class="grid">{grid_html(got, crop=crop)}</div></div></div>'
+    else:
+        note = (f'<div class="subnote">showing rows {crop[0] + 1}–{crop[1]}, cols {crop[2] + 1}–{crop[3]} '
+                f'around the first difference</div>' if crop else "")
+        eg = (f'<div class="grid">{grid_html(exp, got, "exp", crop)}</div>' if exp
+              else '<div class="empty">(no output)</div>')
+        body = (f'{note}<div class="grids"><div class="gridbox"><div class="cap">expected</div>{eg}</div>'
+                f'<div class="gridbox"><div class="cap">got</div>'
+                f'<div class="grid">{grid_html(got, exp, "got", crop)}</div></div></div>')
+    return f'<div class="{cls}">{head}{why}{body}</div>'
+
+
+def tile(pat, other=None, cap=""):
+    if not pat:
+        return ""
+    cells = []
+    for r in range(3):
+        for k in range(3):
+            ch = pat[r][k]
+            bad = other is not None and other[r][k] != ch
+            cells.append(f'<span class="{"bad" if bad else ""}">{cm.esc("␣" if ch == " " else ch)}</span>')
+    return f'<div class="tilebox"><div class="tile">{"".join(cells)}</div><div class="cap">{cm.esc(cap)}</div></div>'
+
+
+def questions(team):
+    qs = []
+    funcs = [f for P in team.parsed for f in P.funcs]
+    n = team.assigned if team.assigned is not None else (min(team.rush_results) if team.rush_results else None)
+    R = team.rush_results.get(n) if n is not None else None
+    entry = next((f for f in funcs if R and f.file == R["file"] and f.name == R["entry"]), None)
+    if R:
+        for t in [t for t in R["tests"] if t["ok"] is False and t["cat"] in ("subject", "core")][:3]:
+            qs.append(f"<code>rush({t['x']}, {t['y']})</code> is wrong ({cm.esc(t['why'])}). "
+                      "Ask them to trace it on paper and find the line.")
+        edge = [t for t in R["tests"] if t["cat"] == "edge"]
+        noisy = [t for t in edge if t["got"] or t["crash"]]
+        if noisy:
+            t = noisy[0]
+            what = t["crash"] or f"prints {len(t['got'])} bytes"
+            qs.append(f"<code>rush({t['x']}, {t['y']})</code> {cm.esc(what)}. What should happen for "
+                      "x or y ≤ 0, and where does the code decide that?")
+        elif entry:
+            guard = [nd for nd in cm.walk(entry.outline) if nd["k"] == "if"
+                     and re.search(r"(<=?\s*0|<\s*1|==\s*0)", nd["branches"][0][1])]
+            if guard:
+                qs.append(f"Show me the check that stops <code>rush(0, 5)</code> in "
+                          f"<code>{cm.esc(entry.name)}</code> (line {guard[0]['line']}). "
+                          "Why <code>" + cm.esc(guard[0]["branches"][0][1]) + "</code>?")
+    loops = [(f, nd) for f in funcs for nd in cm.walk(f.outline) if nd["k"] == "loop"]
+    for f, nd in loops[:3]:
+        qs.append(f"In <code>{cm.esc(f.name)}</code> (line {nd['line']}): why "
+                  f"<code>while ({cm.esc(nd['cond'])})</code>? What prints if the bound is off by one?")
+    callers = {}
+    for f in funcs:
+        for cname in set(f.callees()):
+            callers.setdefault(cname, set()).add(f.name)
+    for f in funcs:
+        cnt = sum(1 for g in funcs for cname, _ in g.calls if cname == f.name)
+        if cnt >= 2 and f.name not in ("main", "ft_putchar"):
+            qs.append(f"<code>{cm.esc(f.name)}</code> is called {cnt} times. What changes between those "
+                      "calls, and why make it a separate function?")
+            break
+    for f in funcs:
+        if f.name not in callers and f.name != "main" and not any(
+                R2["entry"] == f.name for R2 in team.rush_results.values()):
+            qs.append(f"<code>{cm.esc(f.name)}</code> ({cm.esc(f.file)}) is never called. Why is it there?")
+    if any(f.authors for f in funcs):
+        everyone = sorted({a for f in funcs for a in f.authors})
+        asked = 0
+        for f in sorted(funcs, key=lambda f: -f.nlines):
+            if not f.authors or len(everyone) < 2:
+                break
+            top = f.authors.most_common(1)[0][0]
+            other = next((a for a in everyone if a != top), None)
+            if other:
+                qs.append(f"Ask <b>{cm.esc(other)}</b> to explain <code>{cm.esc(f.name)}</code> "
+                          f"(mostly written by {cm.esc(top)}).")
+                asked += 1
+            if asked >= 3:
+                break
+    qs.append("Edit <code>main.c</code> live to <code>rush(123, 42)</code>, then <code>rush(1, 1)</code>, and "
+              f"recompile with <code>{cm.esc(' '.join(team.cfg['flags']))}</code>.")
+    qs.append("How does <code>ft_putchar</code> get a char on screen? What are the 3 arguments of "
+              "<code>write</code>?")
+    return qs
+
+
+def report_html(team):
+    v_cls, v_txt = team.verdict()
+    files = sorted({P.name for P in team.parsed})
+    colors = {f: cm.PALETTE[i % len(cm.PALETTE)] for i, f in enumerate(files)}
+    funcs = [f for P in team.parsed for f in P.funcs]
+    known = {}
+    for f in funcs:
+        known.setdefault(f.name, cm.fn_anchor(f))
+    entries = {(R["file"], R["entry"]) for R in team.rush_results.values() if R["entry"]}
+    called = {cname for f in funcs for cname in f.callees()}
+    flags = {}
+    for f in funcs:
+        fl = set()
+        if (f.file, f.name) in entries or f.name == "main":
+            fl.add("entry")
+        elif f.name not in called:
+            fl.add("dead")
+        if f.nlines > 25:
+            fl.add("over")
+        flags[f.id] = fl
+
+    parts = []
+    assigned = (f"rush{team.assigned:02d} <span class=dim>({cm.esc(team.assigned_why)})</span>"
+                if team.assigned is not None else
+                '<span class="st warn">unknown</span> <span class=dim>— pass --rush N or --leader LOGIN</span>')
+    parts.append(f'<header class="top"><h1>{cm.esc(team.name)}</h1>'
+                 f'<span class="pill verdict {v_cls}">{cm.esc(v_txt)}</span>'
+                 f'<div class="kv"><span>assigned: {assigned}</span>'
+                 f'<span class="dim">{cm.esc(team.path)}</span>'
+                 f'<span class="dim">{time.strftime("%Y-%m-%d %H:%M")}</span>'
+                 f'<span class="dim">subject: {"subject.txt" if team.S.loaded else "built-in core only"}</span></div>'
+                 f'<button class="themebtn" type="button">◐ theme</button></header>')
+    parts.append('<nav class="toc"><a href="#checks">Checklist</a><a href="#output">Output</a>'
+                 '<a href="#structure">Structure</a><a href="#main">Their main</a>'
+                 '<a href="#questions">Defense questions</a><a href="#source">Source</a>'
+                 '<a href="index.html">← all teams</a></nav>')
+
+    # checklist
+    rows = []
+    for label, st, html_, text in team.checks:
+        sym = {"ok": "✓ OK", "bad": "✗ FAIL", "warn": "! CHECK", "na": "– n/a"}[st]
+        rows.append(f'<tr><td class="st {st}">{sym}</td><td><b>{cm.esc(label)}</b></td>'
+                    f'<td>{html_ or cm.esc(text)}</td></tr>')
+    if team.git_authors:
+        tot = sum(team.git_authors.values())
+        rows.append('<tr><td class="st na">git</td><td><b>Commits</b></td><td>' +
+                    ", ".join(f"{cm.esc(a)} <span class=dim>{k}</span>" for a, k in
+                              team.git_authors.most_common()) + f" <span class=dim>({tot} total)</span></td></tr>")
+    parts.append(f'<section id="checks"><h2>Checklist</h2><div class="panel"><table class="checks">'
+                 f'{"".join(rows)}</table></div></section>')
+
+    # output
+    if team.rush_results:
+        order = sorted(team.rush_results, key=lambda n: (n != team.assigned, n))
+        btns, panes = [], []
+        for i, n in enumerate(order):
+            R = team.rush_results[n]
+            core = [t for t in R["tests"] if t["cat"] in ("subject", "core") and t["ok"] is not None]
+            good = all(t["ok"] for t in core) and core
+            mark = "✓" if good else "✗"
+            lbl = f"rush{n:02d}" + (" ★" if n == team.assigned else "")
+            btns.append(f'<button type="button" data-tab="r{n}" class="{"on" if i == 0 else ""}">{lbl}'
+                        f'<span class="s">{mark}</span></button>')
+            tiles = []
+            spec = team.S.expected_for(n)
+            if spec and spec["pattern"]:
+                tiles.append(tile(spec["pattern"], None, "subject"))
+            if R.get("theirs"):
+                tiles.append(tile(R["theirs"], spec["pattern"] if spec and spec["pattern"] else None,
+                                  f"theirs (from rush{PROBE})"))
+            mode = {"subject": "Compared with subject.txt.",
+                    "self": "No subject for this rush: compared with their own pattern (from the 6×5 "
+                            "probe). <b>Check the tile against the PDF.</b>",
+                    "shape": "No subject and no readable pattern: checking the shape only.",
+                    None: ""}[R["mode"]]
+            notes = "".join(f'<div class="subnote">⚠ {nt}</div>' for nt in R["notes"])
+            cards = "".join(test_card(t) for t in R["tests"])
+            if not R["tests"]:
+                h = R.get("harness") or {}
+                cards = f'<pre class="log">{cm.esc(h.get("log", ""))}</pre>'
+            panes.append(f'<div data-pane="r{n}" {"" if i == 0 else "hidden"}>'
+                         f'<div class="tiles">{"".join(tiles)}<div class="subnote" style="max-width:560px">'
+                         f'{mode}<br>entry: <code>{cm.esc(R["entry"] or "?")}</code> in '
+                         f'<code>{cm.esc(R["file"])}</code>. Edge cases (x or y ≤ 0, huge) are '
+                         f'informational: the subject does not define them.</div></div>{notes}'
+                         f'<div class="tests">{cards}</div></div>')
+        parts.append(f'<section id="output"><h2>Output</h2><div data-tabs><div class="tabs">{"".join(btns)}</div>'
+                     f'{"".join(panes)}</div></section>')
+
+    # structure
+    nodes, edges, amb = cm.build_graph(team.parsed, externals="*")
+    for nid, nd in nodes.items():
+        if nd["fn"] is None and nd["name"] not in team.cfg["allowed"]:
+            flags.setdefault(nid, set()).add("forbidden")
+    roots = [f.id for f in funcs if f.name == "main"]
+    legend = "".join(f'<span><i style="background:{colors[f]}"></i>{cm.esc(f)}</span>' for f in files)
+    legend += ('<span>thick border = entry · dashed = never called · red = over 25 lines · '
+               'dashed arrow = name defined in several files</span>')
+    fn_lines = {}
+    cards = []
+    for P in team.parsed:
+        for f in P.funcs:
+            fid = _fid(P.name)
+            cards.append(cm.function_card(f, known, colors[P.name], flags.get(f.id, ()),
+                                          line_href=lambda ln, fid=fid: f"#{fid}-L{ln}"))
+    per_file = []
+    for P in team.parsed:
+        nf = len(P.funcs)
+        per_file.append(f'<span><i style="background:{colors[P.name]}"></i><code>{cm.esc(P.name)}</code> '
+                        f'{nf} fn{"s" if nf != 1 else ""}{" ⚠ >5" if nf > 5 else ""}</span>')
+    parts.append(f'<section id="structure"><h2>Structure</h2>'
+                 f'<div class="legend">{"".join(per_file)}</div>'
+                 f'<div class="graphwrap">{cm.svg_graph(nodes, edges, amb, colors, roots, flags)}</div>'
+                 f'<div class="legend">{legend}</div>'
+                 f'<div class="cards">{"".join(cards)}</div></section>')
+
+    # their main
+    mains = []
+    for n in sorted(team.rush_results):
+        R = team.rush_results[n]
+        own = R.get("own")
+        if not own:
+            continue
+        r = own["run"]
+        pat = R["pattern"]
+        exp = "".join(render(pat, x, y) for x, y in own["calls"]) if pat and own["calls"] else None
+        calls = ", ".join(f"<code>{cm.esc(R['entry'])}({x}, {y})</code>" for x, y in own["calls"]) or "(no literal calls found)"
+        res = ""
+        if exp is not None:
+            res = (' <span class="st ok">✓ matches</span>' if exp == r["out"]
+                   else ' <span class="st bad">✗ differs</span>')
+        crash = crash_text(r)
+        g = (f'<div class="grid">{grid_html(r["out"], exp)}</div>' if r["out"]
+             else '<div class="empty">(no output)</div>')
+        mains.append(f'<div class="panel" style="margin-bottom:10px"><b>rush{n:02d}</b> · calls {calls}{res}'
+                     f'{"<div class=why>" + cm.esc(crash) + "</div>" if crash else ""}'
+                     f'<div style="margin-top:6px">{g}</div></div>')
+    parts.append(f'<section id="main"><h2>Their main.c, as turned in</h2>'
+                 f'{"".join(mains) or "<p class=dim>not built</p>"}</section>')
+
+    # questions
+    parts.append('<section id="questions"><h2>Defense questions</h2><div class="panel"><ol class="qs">'
+                 + "".join(f"<li>{q}</li>" for q in questions(team)) + "</ol></div></section>")
+
+    # source
+    srcs = []
+    for P in team.parsed:
+        fid = _fid(P.name)
+        bad = {}
+        for l, col, code, msg in team.norm.get(P.name, {}).get("errors", []):
+            if l:
+                bad[l] = (bad.get(l, "") + f"{code}: {msg} ").strip()
+        fl = {f.line: cm.fn_anchor(f) for f in P.funcs}
+        nerr = len(team.norm.get(P.name, {}).get("errors", []))
+        srcs.append(f'<details open id="{fid}"><summary><code>{cm.esc(P.name)}</code> '
+                    f'<span class=dim>{P.src.count(chr(10))} lines'
+                    f'{f" · {nerr} norm error(s)" if nerr else ""}</span></summary>'
+                    f'{cm.source_html(P, fid, fl, bad)}</details>')
+    parts.append(f'<section id="source"><h2>Source</h2>{"".join(srcs)}</section>')
+    return cm.page(f"{team.name} · rush00", "".join(parts), EXTRA_CSS)
+
+
+def index_html(summaries, subject):
+    rows = []
+    for s in sorted(summaries, key=lambda s: s["team"]):
+        vc, vt = s["verdict"]
+        rcells = []
+        for n, r in sorted(s["rushes"].items(), key=lambda kv: int(kv[0])):
+            n = int(n)
+            p, t = r["core"]
+            good = p == t and t
+            star = " ★" if s["assigned"] == n else ""
+            rcells.append(f'<span class="st {"ok" if good else "bad"}">rush{n:02d}{star} {p}/{t}</span>')
+        norm = {True: '<span class="st ok">✓</span>', False: '<span class="st bad">✗</span>',
+                None: '<span class="st na">–</span>'}[s["norm_ok"]]
+        forb = (f'<span class="st bad">{cm.esc(", ".join(s["forbidden"]))}</span>' if s["forbidden"]
+                else '<span class="st ok">✓</span>')
+        rows.append(f'<tr><td><a href="{cm.esc(s["team"])}.html"><b>{cm.esc(s["team"])}</b></a></td>'
+                    f'<td><span class="pill {vc}">{cm.esc(vt)}</span></td>'
+                    f'<td>{"rush%02d" % s["assigned"] if s["assigned"] is not None else "?"}</td>'
+                    f'<td>{norm}</td><td>{forb}</td><td>{" ".join(rcells)}</td>'
+                    f'<td class="dim">{cm.esc(s["time"])}</td></tr>')
+    # pattern consensus: what each team's code draws, per rush number
+    cons = {}
+    for s in summaries:
+        for n, r in s["rushes"].items():
+            if r.get("theirs"):
+                cons.setdefault(int(n), {}).setdefault(tuple(r["theirs"]), []).append(s["team"])
+    blocks = []
+    for n in sorted(cons):
+        spec = subject.expected_for(n)
+        sp = spec["pattern"] if spec else None
+        items = []
+        if sp:
+            items.append(tile(sp, None, "subject"))
+        for pat, teams in sorted(cons[n].items(), key=lambda kv: -len(kv[1])):
+            p3 = [list(x) for x in pat]
+            items.append(tile(p3, sp, f"{len(teams)} team(s): " + ", ".join(teams)))
+        blocks.append(f'<div class="panel"><b>rush{n:02d}</b>'
+                      f'<div class="tiles" style="margin-top:8px">{"".join(items)}</div></div>')
+    body = (f'<header class="top"><h1>Rush00 · evaluations</h1><span class="dim">{len(summaries)} team(s) · '
+            f'subject: {"subject.txt" if subject.loaded else "built-in core only"}</span>'
+            f'<button class="themebtn" type="button">◐ theme</button></header>'
+            f'<section><div class="panel" style="overflow:auto"><table class="checks"><tr class=dim>'
+            f'<td>team</td><td>verdict</td><td>assigned</td><td>norm</td><td>forbidden</td>'
+            f'<td>core cases per rush (★ = assigned)</td><td>evaluated</td></tr>{"".join(rows)}</table></div></section>'
+            f'<section><h2>What each team draws</h2><p class="dim">Each team\'s pattern, read from its own '
+            f'rush(6, 5). Red cells disagree with subject.txt. With no subject loaded, the odd one out is '
+            f'the one to check against the PDF.</p><div class="cons">{"".join(blocks) or "<p class=dim>nothing yet</p>"}</div></section>')
+    return cm.page("Rush00 evaluations", body, EXTRA_CSS)
+
+
+# ==========================================================================
+#  CLI
+# ==========================================================================
+
+def is_url(s):
+    return bool(re.match(r"^(https?://|git@|ssh://|[\w.-]+@[\w.-]+:)", s))
+
+
+def clone(url, name=None):
+    name = name or re.sub(r"\.git$", "", url.rstrip("/").split("/")[-1].split(":")[-1])
+    dest = os.path.join(REPO_DIR, name)
+    os.makedirs(REPO_DIR, exist_ok=True)
+    if os.path.exists(dest):
+        print(c(DIM, f"  {name} already cloned — pulling"))
+        subprocess.run(["git", "-C", dest, "pull", "--ff-only", "-q"])
+    else:
+        print(c(DIM, f"  cloning {url} → repo/{name}"))
+        if subprocess.run(["git", "clone", "-q", url, dest]).returncode != 0:
+            return None
+    return dest
+
+
+def print_team(team, report):
+    vc, vt = team.verdict()
+    col = {"ok": OK, "bad": BAD, "warn": WARN}[vc]
+    rel = os.path.relpath(team.ex, team.path) if team.ex else "-"
+    asg = f"rush{team.assigned:02d}" if team.assigned is not None else "?"
+    print(f"\n{c(BOLD, '▸ ' + team.name)}  {c(col, vt)}  {c(DIM, rel + '/ · assigned ' + asg)}"
+          + (c(DIM, f" ({team.assigned_why})") if team.assigned_why else ""))
+    sym = {"ok": c(OK, "✓"), "bad": c(BAD, "✗"), "warn": c(WARN, "!"), "na": c(DIM, "–")}
+    for label, st, _, text in team.checks:
+        print(f"  {sym[st]} {label:44} {c(DIM, text[:110])}")
+    for n, R in sorted(team.rush_results.items()):
+        bad = [t for t in R["tests"] if t["ok"] is False and t["cat"] in ("subject", "core")]
+        for t in bad[:4]:
+            print(f"      {c(BAD, f'rush{n:02d}')} rush({t['x']}, {t['y']}): {t['why']}")
+        edge = [t for t in R["tests"] if t["cat"] == "edge" and (t["got"] or t["crash"])]
+        if edge:
+            e = ", ".join(f"({t['x']},{t['y']})" for t in edge[:5])
+            print(c(DIM, f"      rush{n:02d} edge cases with output/crash (informational): {e}"))
+    print(f"  {c(CYAN, 'report')} {report}")
+
+
+def evaluate(path, subject, leader, rush, norm, meta):
+    name = os.path.basename(os.path.realpath(path))
+    m = meta.get(name, {})
+    leader = leader or m.get("leader")
+    if rush is None and "rush" in m:
+        rush = int(m["rush"])
+    team = Team(path, subject, leader, rush, norm).evaluate()
+    os.makedirs(REPORT_DIR, exist_ok=True)
+    report = os.path.join(REPORT_DIR, f"{team.name}.html")
+    with open(report, "w", encoding="utf-8") as f:
+        f.write(report_html(team))
+    with open(os.path.join(REPORT_DIR, f"{team.name}.json"), "w", encoding="utf-8") as f:
+        json.dump(team.summary(), f, indent=1)
+    print_team(team, report)
+    team.cleanup()
+    return report
+
+
+def write_index(subject):
+    sums = []
+    if os.path.isdir(REPORT_DIR):
+        for f in sorted(os.listdir(REPORT_DIR)):
+            if f.endswith(".json") and not f.startswith("."):
+                try:
+                    with open(os.path.join(REPORT_DIR, f), encoding="utf-8") as fh:
+                        d = json.load(fh)
+                    if isinstance(d, dict) and "team" in d:
+                        sums.append(d)
+                except (OSError, ValueError):
+                    pass
+    path = os.path.join(REPORT_DIR, "index.html")
+    os.makedirs(REPORT_DIR, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(index_html(sums, subject))
+    return path
+
+
+def main(argv):
+    opts = {"leader": None, "rush": None, "open": False, "norm": True, "port": 4242}
+    targets = []
+    it = iter(argv)
+    for a in it:
+        if a == "--leader":
+            opts["leader"] = next(it, None)
+        elif a == "--rush":
+            opts["rush"] = int(next(it, "0"))
+        elif a == "--open":
+            opts["open"] = True
+        elif a == "--port":
+            opts["port"] = int(next(it, "4242"))
+        elif a == "--no-norm":
+            opts["norm"] = False
+        elif a in ("-h", "--help"):
+            print(__doc__)
+            return 0
+        else:
+            targets.append(a)
+    if targets[:1] == ["init"]:
+        return cmd_init()
+    if targets[:1] == ["subject"]:
+        if len(targets) < 2:
+            print_subject(Subject.load())
+            return 0
+        return cmd_subject(targets[1])
+    if targets[:1] == ["serve"]:
+        import web
+        return web.serve(sys.modules[__name__], opts["port"], opts["open"])
+
+    S = Subject.load()
+    for note in S.notes:
+        print(c(WARN, "subject.txt: " + note))
+    if not S.loaded:
+        print(c(WARN, "no subject.txt — checking against the built-in core only "
+                      "(`rush00 subject today.pdf` once you have the PDF)"))
+    meta = load_teams_file()
+    if not targets:
+        if not os.path.isdir(REPO_DIR):
+            print(f"nothing in {REPO_DIR}")
+            return 1
+        targets = [os.path.join(REPO_DIR, d) for d in sorted(os.listdir(REPO_DIR))
+                   if os.path.isdir(os.path.join(REPO_DIR, d)) and not d.startswith(".")]
+        if not targets:
+            print(f"no team folders in {REPO_DIR} — drop one in, or `rush00 <git-url>`")
+            return 1
+    reports = []
+    for t in targets:
+        if is_url(t):
+            t = clone(t)
+            if not t:
+                continue
+        elif not os.path.isdir(t) and os.path.isdir(os.path.join(REPO_DIR, t)):
+            t = os.path.join(REPO_DIR, t)
+        if not os.path.isdir(t):
+            print(c(BAD, f"not a folder: {t}"))
+            continue
+        if not find_ex_dir(t, S.cfg["dir"]):
+            print(c(DIM, f"\n▸ {os.path.basename(t)}: no rushNN.c — skipped (not a rush00 repo?)"))
+            continue
+        reports.append(evaluate(t, S, opts["leader"], opts["rush"], opts["norm"], meta))
+    idx = write_index(S)
+    print(f"\n{c(CYAN, 'all teams')} {idx}")
+    if opts["open"] and reports:
+        webbrowser.open("file://" + (reports[0] if len(reports) == 1 else idx))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]) or 0)

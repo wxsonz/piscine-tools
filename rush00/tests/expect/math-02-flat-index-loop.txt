@@ -1,0 +1,3 @@
+rush=1
+correct=yes
+algorithm=one flat loop over i from 0 to x*y-1, with r = i / x and c = i % x, a newline after each cell in the last column, and the char looked up from a 9-char pattern

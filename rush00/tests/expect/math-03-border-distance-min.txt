@@ -1,0 +1,3 @@
+rush=2
+correct=yes
+algorithm=for each cell take the distance to the nearest top/bottom and left/right border with min(), a distance of 0 with index > 0 means the last row or column, and index a 9-char table with that row_class*3 + col_class

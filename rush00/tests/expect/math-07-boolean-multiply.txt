@@ -1,0 +1,3 @@
+rush=1
+correct=yes
+algorithm=no if/else at all: each cell gets 0/1 flags for top/middle/bottom and left/center/right, and the char is the sum of flag*char products

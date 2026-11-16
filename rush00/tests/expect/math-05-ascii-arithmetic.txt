@@ -1,0 +1,3 @@
+rush=4
+correct=yes
+algorithm=compute each char as arithmetic on ASCII codes: top row is 'A'+col_class, bottom row is 'C'-col_class, middle row is ' ' plus 'B'-' ' when the column is an edge

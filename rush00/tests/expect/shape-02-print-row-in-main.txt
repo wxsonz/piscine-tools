@@ -1,0 +1,3 @@
+rush=3
+correct=yes
+algorithm=rush03.c only chooses the three chars per row and calls print_row(), which lives in main.c and draws one row of x chars

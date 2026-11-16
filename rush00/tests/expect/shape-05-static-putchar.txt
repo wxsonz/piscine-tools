@@ -1,0 +1,3 @@
+rush=0
+correct=yes
+algorithm=rush00.c defines its own static ft_putchar and uses it for output, while ft_putchar.c also exists but is not used by the rush file

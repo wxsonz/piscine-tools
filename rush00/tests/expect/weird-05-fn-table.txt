@@ -1,0 +1,3 @@
+rush=4
+correct=yes
+algorithm=a table of three row-printing function pointers, one per row type, selected by row index

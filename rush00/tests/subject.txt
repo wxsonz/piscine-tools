@@ -1,0 +1,18 @@
+# TEST subject for the corpus in tests/teams (patterns taken from wachaipr's own rush00).
+# Not the real subject: the real one goes in rush00/tool/subject.txt on the day.
+dir      = ex00
+files    = main.c ft_putchar.c rush0X.c
+allowed  = write
+flags    = -Wall -Wextra -Werror
+function = rush
+
+== rush00
+pattern = 'o-o' '| |' 'o-o'
+== rush01
+pattern = '/*\' '* *' '\*/'
+== rush02
+pattern = 'ABA' 'B B' 'CBC'
+== rush03
+pattern = 'ABC' 'B B' 'ABC'
+== rush04
+pattern = 'ABC' 'B B' 'CBA'

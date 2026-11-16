@@ -1,0 +1,4 @@
+rush=0
+entry=rush00
+correct=yes
+algorithm=rush00(), rush01() and rush02() are separate differently named functions in rush00.c..rush02.c, main.c calls all three (rush01/rush02 as weak references)

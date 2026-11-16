@@ -1,0 +1,3 @@
+rush=4
+correct=yes
+algorithm=rush04.c validates with is_valid(), then draws each row with draw_row() which draws each cell with draw_cell()

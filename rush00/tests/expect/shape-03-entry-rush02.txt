@@ -1,0 +1,4 @@
+rush=2
+entry=rush02
+correct=yes
+algorithm=entry function is rush02(x, y) in rush02.c with row-by-row pattern lookup, main.c calls rush02(5, 3)

@@ -1,0 +1,907 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rush00 Algorithm</title>
+<link rel="stylesheet" href="/www/style.css">
+<style>
+.top a.back{text-decoration:none;color:var(--dim);font:500 10.5px var(--mono);letter-spacing:.2em;text-transform:uppercase;padding-bottom:10px}
+.top a.back:hover{color:var(--accent)}
+#verdict{padding-bottom:8px}
+a.lnk{border:1px solid var(--line);border-radius:999px;padding:5px 14px;text-decoration:none;background:var(--chip);white-space:nowrap}
+a.lnk:hover{border-color:color-mix(in srgb,var(--ink) 35%,var(--line))}
+.top h1{overflow-wrap:anywhere}
+.tabs{display:flex;flex-wrap:wrap;gap:5px}
+.tabs button{font:600 13px var(--mono);padding:4px 10px}
+.tabs button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.sizebar input[type=number]{width:64px;font-family:var(--mono)}
+.sizebar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.sizebar .presets{display:flex;flex-wrap:wrap;gap:4px}
+.sizebar .presets button{padding:2px 8px;font:12px var(--mono)}
+.idea{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:980px){.idea{grid-template-columns:1fr}}
+.lead{font-size:15px;margin:0 0 12px}
+/* decision matrix */
+table.mx{border-collapse:separate;border-spacing:5px;margin:-5px}
+table.mx th{font-weight:500;text-align:left;font-size:12.5px;vertical-align:bottom;padding:2px 4px}
+table.mx th.rowh{vertical-align:middle;max-width:280px}
+table.mx th .why,.rule .why{display:block;font:600 13px var(--mono)}
+table.mx th .how,.rule .how{display:block;font:11.5px var(--mono);color:var(--dim);overflow-wrap:anywhere}
+table.mx td{min-width:58px;height:54px;text-align:center;border-radius:12px;font:700 22px var(--mono);cursor:default;position:relative}
+table.mx td.none{background:var(--chip);opacity:.35}
+table.mx td small{display:block;font:500 10px var(--sans);color:var(--dim);letter-spacing:.02em}
+.axis{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--dim)}
+.rule{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line)}
+.rule:first-child{border-top:0}
+.sw{flex:none;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font:700 18px var(--mono)}
+.path{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.path .arrow{color:var(--dim)}
+.where{font-size:12px;color:var(--dim)}
+.origin{font-size:12px;margin-top:8px}
+/* char maps */
+.cmap{display:inline-grid;gap:2px;font-family:var(--mono);user-select:none}
+.cmap .c{display:flex;align-items:center;justify-content:center;border-radius:5px;font-weight:700;cursor:pointer;position:relative}
+.cmap .c.blank{background:transparent;cursor:default}
+.cmap .c.dimmed{opacity:.18}
+.cmap .c.wrong{box-shadow:inset 0 0 0 2px var(--bad)}
+.cmap .c.just{box-shadow:0 0 0 2px var(--ink)}
+.cmap .c.pending{background:var(--code)!important;color:transparent}
+.mapwrap{overflow:auto;max-width:100%;padding:3px}
+.tip{position:fixed;z-index:40;background:var(--ink);color:var(--bg);border-radius:12px;box-shadow:var(--shadow);padding:7px 10px;font-size:12.5px;max-width:440px;pointer-events:none;line-height:1.45}
+.tip code{color:inherit}
+/* sizes */
+.sizes{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+.sizes .one{display:flex;flex-direction:column;gap:5px;max-width:260px}
+.sizes .lbl{font:600 12.5px var(--mono)}
+.flag{font-size:12px;color:var(--warn)}
+.sizes .one{padding:10px 12px;border-radius:14px;background:color-mix(in srgb,var(--code) 60%,transparent);border:1px solid var(--line)}
+.qs{margin:0;padding-left:20px}.qs li{margin:7px 0}
+.vals{font:12.5px var(--mono)}
+.vals b{color:var(--bad)}
+/* run */
+.controls{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;position:sticky;top:10px;z-index:5;margin-bottom:12px;padding:8px 10px;border-radius:999px;
+  background:var(--glass);border:1px solid var(--line);box-shadow:inset 0 1px 0 var(--rim),var(--shadow);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%)}
+.controls input[type=range]{flex:1;min-width:160px}
+.narr{font-size:16.5px;padding:14px 20px;border-radius:18px;background:var(--glass);border:1px solid var(--line);border-left:3px solid var(--accent);box-shadow:inset 0 1px 0 var(--rim);min-height:54px;margin-bottom:12px}
+.narr code{font-size:14.5px;background:var(--code);padding:0 4px;border-radius:4px}
+.narr .yes{color:var(--ok);font-weight:700}.narr .no{color:var(--bad);font-weight:700}
+.runcols{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.8fr) minmax(0,1fr);gap:12px;align-items:start}
+@media (max-width:1100px){.runcols{grid-template-columns:1fr}}
+.code{font:12.5px/1.55 var(--mono);tab-size:4;overflow:auto;padding:6px 0}
+.code .fnh{padding:6px 12px 2px;font:600 11px var(--sans);color:var(--dim);text-transform:uppercase;letter-spacing:.06em}
+.code .ln{display:flex;white-space:pre;padding-right:8px}
+.code .ln .no{min-width:3em;text-align:right;padding-right:6px;color:var(--dim);user-select:none}
+.code .ln .hits{min-width:2.6em;text-align:right;padding-right:8px;color:var(--dim);font-size:10.5px;user-select:none}
+.code .ln.ran .hits{color:var(--accent)}
+.code .ln.cur{background:var(--hl);box-shadow:inset 3px 0 0 var(--accent)}
+.code .ln.next{box-shadow:inset 3px 0 0 var(--dim)}
+.code .badge{margin-left:10px;font:600 11.5px var(--sans);padding:0 7px;border-radius:999px;white-space:nowrap}
+.code .badge.t{background:color-mix(in srgb,var(--ok) 20%,transparent);color:var(--ok)}
+.code .badge.f{background:color-mix(in srgb,var(--bad) 18%,transparent);color:var(--bad)}
+.frames{display:flex;flex-direction:column;gap:8px}
+.frame{border:1px solid var(--line);border-radius:14px;padding:9px 12px;background:var(--glass);box-shadow:inset 0 1px 0 var(--rim)}
+.frame.top{border-color:var(--accent);box-shadow:inset 0 1px 0 var(--rim),0 0 0 1px color-mix(in srgb,var(--accent) 30%,transparent)}
+.frame .fh{font:600 13px var(--mono)}
+.frame .fh span{font-weight:400;color:var(--dim);font-size:11.5px}
+.frame table{border-collapse:collapse;margin-top:4px;font:12.5px var(--mono)}
+.frame td{padding:1px 10px 1px 0}
+.frame td.k{color:var(--dim)}
+.frame td.chg{background:var(--hl);color:var(--hlink);font-weight:700;border-radius:4px}
+.frame .tag{font:10px var(--sans);color:var(--dim);margin-left:4px}
+.outhead{font-size:12px;color:var(--dim);margin-bottom:6px}
+kbd{font:11px var(--mono);border:1px solid var(--line);border-radius:4px;padding:0 4px;background:var(--chip)}
+.loading{padding:40px;text-align:center;color:var(--dim)}
+</style></head>
+<body><div class="wrap">
+<div class="rail">C Piscine · Batch 20 // Rush00 · algorithm view</div>
+<header class="top"><a class="back" href="/">← teams</a><h1 id="team">…</h1><span id="verdict"></span>
+<div class="tabs" id="rtabs"></div><span class="sp"></span><a id="reportlink" class="lnk" href="#">Full report</a>
+<button class="themebtn" type="button">◐</button></header>
+
+<section>
+<div class="sizebar"><b>rush(</b><input id="x" type="number" min="-3" max="40" value="5"><b>,</b><input id="y" type="number" min="-3" max="30" value="3"><b>)</b>
+<button class="primary" id="go" type="button">Run</button>
+<span class="presets" id="presets"></span><span id="status" class="dim"></span></div>
+</section>
+
+<div id="main"><div class="loading"><span class="spin"></span> tracing their code…</div></div>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(path) {
+  const r = await fetch(path); const j = await r.json().catch(() => ({error: r.statusText}));
+  if (!r.ok || j.error) throw new Error(j.error || r.statusText); return j;
+}
+(function theme() {
+  const root = document.documentElement;
+  try { const t = localStorage.getItem('rush-theme'); if (t) root.setAttribute('data-theme', t); } catch (e) {}
+  $('.themebtn').onclick = () => {
+    const dark = root.getAttribute('data-theme') === 'dark' || (!root.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
+    const t = dark ? 'light' : 'dark'; root.setAttribute('data-theme', t);
+    try { localStorage.setItem('rush-theme', t); } catch (e) {}
+  };
+})();
+
+const TEAM = decodeURIComponent(location.pathname.split('/')[2] || '');
+const Q = new URLSearchParams(location.search);
+let RUSH = Q.has('rush') ? +Q.get('rush') : null;
+let X = Q.has('x') ? +Q.get('x') : 5, Y = Q.has('y') ? +Q.get('y') : 3;
+const SIZES = [[1, 1], [5, 1], [1, 5], [2, 2], [5, 3], [6, 5]];
+const PALETTE = ['#4c8df6', '#e39b2d', '#3fb67e', '#c45fd0', '#e0584d', '#2fb3b3', '#9a7ff0', '#b8a83a', '#e06fa0', '#6c8a3a', '#d4683a', '#5a6fd6'];
+const cache = new Map();
+let COLORS = new Map();
+let T = null, A = null, ALL = [];
+
+function traceUrl(x, y) { return `/api/trace?team=${encodeURIComponent(TEAM)}&rush=${RUSH ?? -1}&x=${x}&y=${y}`; }
+async function getTrace(x, y) {
+  const k = `${RUSH}:${x}:${y}`;
+  if (!cache.has(k)) cache.set(k, api(traceUrl(x, y)).catch(e => { cache.delete(k); throw e; }));
+  return cache.get(k);
+}
+
+// ---------------------------------------------------------------- analysis
+const KW = new Set(['if', 'while', 'else', 'return', 'int', 'char', 'void', 'unsigned', 'const', 'sizeof']);
+function fmt(v) {
+  if (v === undefined) return '?';
+  if (typeof v === 'number') return String(v);
+  if (v.c !== undefined) return v.c === 10 ? "'\\n'" : v.c === 32 ? "' '" : (v.c >= 32 && v.c < 127 ? `'${String.fromCharCode(v.c)}'` : `(char)${v.c}`);
+  if (v.s !== undefined) return JSON.stringify(v.s);
+  if (v.p !== undefined) return v.p;
+  return v.t ?? '?';
+}
+function showCh(ch) { return ch === ' ' ? '␣' : ch; }
+function srcLine(T, f, l) { return ((T.files[f] || [])[l - 1] || '').trim(); }
+function ctxOf(T, f, l) { return (T.ctx && T.ctx[`${f}:${l}`]) || []; }
+function decisionOf(T, f, l) {
+  const ch = ctxOf(T, f, l).filter(d => d.kind !== 'while');
+  return ch.length ? ch[ch.length - 1] : null;
+}
+function chainText(T, f, l) {
+  const ch = ctxOf(T, f, l).filter(d => d.kind !== 'while');
+  if (!ch.length) return 'always';
+  return ch.map(d => d.kind === 'else' ? (d.prev.length === 1 ? `not (${d.prev[0]})` : 'else') : d.cond).join('  ›  ');
+}
+function condText(d) {
+  if (!d) return 'always';
+  if (d.kind === 'else') return d.prev.length ? 'otherwise' : 'else';
+  return d.cond;
+}
+function condLong(d) {
+  if (!d) return 'no condition: always runs';
+  if (d.kind === 'if') return `<code>${esc(d.cond)}</code>`;
+  if (d.kind === 'elif') return `<code>${esc(d.cond)}</code> <span class="dim">(and not ${d.prev.map(c => '<code>' + esc(c) + '</code>').join(', not ')})</span>`;
+  return `none of ${d.prev.map(c => '<code>' + esc(c) + '</code>').join(', ')}`;
+}
+function posClass(r, c, x, y) {
+  const rc = y === 1 ? 'only' : r === 0 ? 'top' : r === y - 1 ? 'bottom' : 'mid';
+  const cc = x === 1 ? 'only' : c === 0 ? 'left' : c === x - 1 ? 'right' : 'mid';
+  const names = {'top|left': 'top-left corner', 'top|right': 'top-right corner', 'bottom|left': 'bottom-left corner',
+    'bottom|right': 'bottom-right corner', 'top|mid': 'top edge', 'bottom|mid': 'bottom edge', 'mid|left': 'left edge',
+    'mid|right': 'right edge', 'mid|mid': 'inside', 'only|only': 'the single cell', 'only|left': 'left end (1 row)',
+    'only|right': 'right end (1 row)', 'only|mid': 'middle (1 row)', 'top|only': 'top end (1 column)',
+    'bottom|only': 'bottom end (1 column)', 'mid|only': 'middle (1 column)'};
+  return names[rc + '|' + cc] || `${rc}/${cc}`;
+}
+// ---- following a printed char back to where it was decided ---------------------------
+// Two things can decide a char: which LINE ran (branches: the control path) and which
+// VALUES an expression saw (math: table[rc * 3 + cc]). For each printed byte we keep the
+// control path (the user frames and their lines) and follow its value through parameters,
+// local assignments, helper return values and buffers until we hit a literal (decided by
+// the path alone) or a computed expression (decided by the variables in it).
+function stmtAt(T, f, l) {
+  const L = T.files[f] || [];
+  let s = '';
+  for (let i = l - 1; i < Math.min(L.length, l + 7); i++) {
+    s += ' ' + L[i].trim();
+    if (L[i].includes(';') || L[i].includes('{')) break;
+  }
+  return s.trim();
+}
+function balanced(s) { let d = 0; for (const ch of s) { if (ch === '(') d++; else if (ch === ')' && --d < 0) return false; } return d === 0; }
+function splitArgs(s) {
+  const out = []; let d = 0, cur = '';
+  for (const ch of s) {
+    if (ch === '(' || ch === '[') d++;
+    if (ch === ')' || ch === ']') d--;
+    if (ch === ',' && d === 0) { out.push(cur.trim()); cur = ''; } else cur += ch;
+  }
+  if (cur.trim()) out.push(cur.trim());
+  return out;
+}
+function callArgs(text, name) {
+  const m = new RegExp('\\b' + name + '\\s*\\(').exec(text);
+  if (!m) return null;
+  let d = 1, s = '';
+  for (let i = m.index + m[0].length; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '(') d++;
+    else if (ch === ')' && --d === 0) break;
+    s += ch;
+  }
+  return splitArgs(s);
+}
+function cleanExpr(e) {
+  e = e.trim().replace(/;$/, '').trim();
+  for (;;) {
+    const before = e;
+    e = e.replace(/^\(\s*(unsigned\s+|signed\s+|const\s+)?(char|int)\s*\)\s*/, '');
+    if (/^\(.*\)$/.test(e) && balanced(e.slice(1, -1))) e = e.slice(1, -1).trim();
+    if (e === before) return e;
+  }
+}
+const assignRe = v => new RegExp('(^|[^\\w.>])' + v + '\\s*(=(?!=)|\\+\\+|--|[-+*/%]=)|(\\+\\+|--)\\s*' + v + '\\b');
+function frameAt(T, k, d) { const st = T.steps[k].stack; return st[st.length - d]; }
+function paramNames(T, fn) {
+  const f = T.funcs.find(x => x.name === fn);
+  return f ? f.params.map(p => (p.match(/([A-Za-z_]\w*)\s*(\[\s*\])?\s*$/) || [])[1]) : [];
+}
+function idsOf(e) { return [...new Set((e.replace(/'(\\.|[^'\\])'/g, ' ').match(/[A-Za-z_]\w*/g) || []).filter(id => !KW.has(id)))]; }
+function isScalar(v) { return typeof v === 'number' || (v && (v.c !== undefined || v.s !== undefined)); }
+function lastAssign(T, k, d, fn, v) {
+  const re = assignRe(v);
+  for (let j = k; j >= 0; j--) {
+    const st = T.steps[j];
+    if (st.stack.length < d) return -1;
+    if (st.stack.length === d && st.stack[0].fn === fn && re.test(stmtAt(T, st.f, st.l))) return j;
+  }
+  return -1;
+}
+function keyDef(T, k, d, fn, name) {
+  if (paramNames(T, fn).includes(name)) return {param: true};
+  const j = lastAssign(T, k, d, fn, name);
+  if (j < 0) return null;
+  const st = T.steps[j];
+  return {f: st.f, l: st.l, text: stmtAt(T, st.f, st.l), chain: chainText(T, st.f, st.l)};
+}
+function dataAt(T, k, d, expr) {
+  const fr = frameAt(T, k, d);
+  if (!fr) return null;
+  const vals = {}, defs = {};
+  for (const id of idsOf(expr)) {
+    if (fr.vars && isScalar(fr.vars[id])) { vals[id] = fmt(fr.vars[id]); defs[id] = keyDef(T, k, d, fr.fn, id); }
+  }
+  return {fn: fr.fn, f: fr.f, l: fr.l, expr, vals, defs};
+}
+function calleeReturn(T, k, d, name) {
+  // the helper ran while the caller (depth d) was on its line: find that window, then the
+  // last `return` the helper executed inside it
+  let s0 = k;
+  while (s0 > 0 && T.steps[s0].stack.length > d) s0--;
+  let found = -1;
+  for (let j = s0 + 1; j < T.steps.length; j++) {
+    const st = T.steps[j];
+    if (st.stack.length <= d) break;
+    if (st.stack.length === d + 1 && st.stack[0].fn === name && /^return\b/.test(stmtAt(T, st.f, st.l))) found = j;
+  }
+  return found;
+}
+function resolve(T, k, d, expr, extra, hops) {
+  expr = cleanExpr(expr);
+  const fr = frameAt(T, k, d);
+  if (!fr || hops > 10 || !expr) return {extra};
+  if (/^'(\\.|[^'\\])+'$/.test(expr) || /^"/.test(expr) || /^-?\d+$/.test(expr)) return {extra, lit: true};
+  if (/^&/.test(expr)) return resolve(T, k, d, expr.slice(1), extra, hops + 1);
+  if (/^[A-Za-z_]\w*$/.test(expr)) {
+    const pi = paramNames(T, fr.fn).indexOf(expr);
+    if (pi >= 0) {
+      const caller = d > 1 ? frameAt(T, k, d - 1) : null;
+      const args = caller && callArgs(stmtAt(T, caller.f, caller.l), fr.fn);
+      if (args && args[pi] !== undefined) return resolve(T, k, d - 1, args[pi], extra, hops + 1);
+      return {extra, data: dataAt(T, k, d, expr)};
+    }
+    const j = lastAssign(T, k, d, fr.fn, expr);
+    if (j >= 0) {
+      const st = T.steps[j], m = stmtAt(T, st.f, st.l).match(new RegExp('(^|[^\\w.>])' + expr + '\\s*=(?!=)\\s*([^;]*)'));
+      if (m) return resolve(T, j, d, m[2], [...extra, {fn: st.stack[0].fn, f: st.f, l: st.l, assign: true}], hops + 1);
+    }
+    return {extra, data: dataAt(T, k, d, expr)};
+  }
+  const call = expr.match(/^([A-Za-z_]\w*)\s*\(/);
+  if (call && T.funcs.some(f => f.name === call[1]) && balanced(expr.slice(call[0].length - 1)) && expr.endsWith(')')) {
+    const j = calleeReturn(T, k, d, call[1]);
+    if (j >= 0) {
+      const st = T.steps[j];
+      const rexpr = stmtAt(T, st.f, st.l).replace(/^return\s*/, '');
+      return resolve(T, j, d + 1, rexpr, [...extra, {fn: call[1], f: st.f, l: st.l}], hops + 1);
+    }
+    return {extra};
+  }
+  return {extra, data: dataAt(T, k, d, expr)};
+}
+function traceCell(T, cell) {
+  let k, top, d, expr = null;
+  if (cell.stored != null) {
+    k = cell.stored; top = T.steps[k].stack[0]; d = T.steps[k].stack.length;
+    const m = stmtAt(T, top.f, top.l).match(/(?<![=!<>+\-*/%&|^])=(?!=)\s*([^;]*)/);
+    if (m) expr = m[1];
+  } else {
+    k = cell.step; top = T.steps[k].stack[0]; d = T.steps[k].stack.length;
+    const args = callArgs(stmtAt(T, top.f, top.l), 'write');
+    if (args && args.length > 1) expr = args[1];
+  }
+  if (!expr) return {extra: []};
+  return resolve(T, k, d, expr, [], 0);
+}
+
+function analyze(T) {
+  const cells = [], newlines = [];
+  let r = 0, c = 0, maxc = 0, writes = 0;
+  T.steps.forEach((s, k) => (s.w || []).forEach(w => {
+    if (w.fd !== 1) return;
+    writes++;
+    [...w.d].forEach((ch, j) => {
+      if (ch === '\n') { newlines.push({r, step: k}); r++; c = 0; return; }
+      // a byte that went through memory (buf[i] = c; then one write) belongs to the
+      // line that stored it, not to the write: that is where the decision was made
+      const ps = w.prov && w.prov[j] != null ? T.steps[w.prov[j]] : null;
+      const base = ps ? [...ps.stack].reverse().map(f => ({fn: f.fn, f: f.f, l: f.l})) : [...w.stack].reverse();
+      const cell = {r, c, ch, step: k, stored: ps ? w.prov[j] : null, cls: posClass(r, c, T.args[0], T.args[1])};
+      const res = traceCell(T, cell);
+      cell.frames = [...base, ...res.extra];   // assignment lines too: `ch = 'A';` inside a branch decides
+      cell.data = res.data || null;
+      cells.push(cell);
+      c++; maxc = Math.max(maxc, c);
+    });
+  }));
+  return {T, cells, newlines, writes, regions: new Map(), rows: r + (c > 0 ? 1 : 0), cols: maxc, x: T.args[0], y: T.args[1]};
+}
+
+// ---- axes: what the char depends on -----------------------------------------------------
+let AXES = [];
+function deciders(analyses) {
+  const lines = new Map(), depth = new Map();
+  for (const a of analyses) for (const cell of a.cells) cell.frames.forEach((f, i) => {
+    if (!lines.has(f.fn)) { lines.set(f.fn, new Set()); depth.set(f.fn, i); }
+    lines.get(f.fn).add(f.f + ':' + f.l);
+  });
+  return [...lines.keys()].filter(fn => lines.get(fn).size > 1).sort((a, b) => depth.get(a) - depth.get(b));
+}
+function frameOf(region, fn) { for (let i = region.frames.length - 1; i >= 0; i--) if (region.frames[i].fn === fn) return region.frames[i]; return null; }
+function splitPV(v) { const m = String(v).match(/^(.*)@(.*):(\d+)$/); return m ? {fn: m[1], f: m[2], l: +m[3]} : null; }
+function axisValue(cell, ax) {
+  if (ax.kind === 'P') {
+    for (let i = cell.frames.length - 1; i >= 0; i--) { const f = cell.frames[i]; if (ax.fns.includes(f.fn)) return `${f.fn}@${f.f}:${f.l}`; }
+    return '–';
+  }
+  if (ax.kind === 'K') return cell.data && cell.data.f + ':' + cell.data.l === ax.site && ax.name in cell.data.vals ? cell.data.vals[ax.name] : '–';
+  if (ax.kind === 'K1') {
+    if (!cell.data || cell.data.f + ':' + cell.data.l !== ax.site) return '–';
+    return ax.names.find(n => cell.data.vals[n] === '1') || '–';
+  }
+  return cell.ch;
+}
+function finalize(analyses) {
+  const canon = analyses.find(a => a.x === 6 && a.y === 5) || analyses.find(a => a === A) || analyses[0];
+  // functions that never run for the same cell (row_top / row_mid / row_bot) are one decision
+  const together = (p, q) => analyses.some(a => a.cells.some(c => c.frames.some(f => f.fn === p) && c.frames.some(f => f.fn === q)));
+  const groups = [];
+  for (const fn of deciders(analyses)) {
+    const g = groups.find(g => g.every(o => !together(fn, o)));
+    if (g) g.push(fn); else groups.push([fn]);
+  }
+  AXES = groups.map(g => ({kind: 'P', fns: g, fn: g.join(' / '), id: 'P:' + g.join('/')}));
+  // computed chars: keep the variables that actually change from cell to cell
+  const sites = new Map();
+  for (const cell of canon.cells) if (cell.data) {
+    const key = cell.data.f + ':' + cell.data.l;
+    if (!sites.has(key)) sites.set(key, {cells: [], data: cell.data});
+    sites.get(key).cells.push(cell);
+  }
+  let rawCoords = false;
+  for (const [site, s] of sites) {
+    const names = Object.keys(s.data.vals).filter(n => new Set(s.cells.map(c => c.data.vals[n])).size > 1);
+    const combos = new Set(s.cells.map(c => names.map(n => c.data.vals[n]).join(',')));
+    if (names.length && combos.size <= 12) {
+      // booleans where exactly one is 1 in every cell (top / mid / bot) are one key
+      const bools = names.filter(n => s.cells.every(c => c.data.vals[n] === '0' || c.data.vals[n] === '1'));
+      const groups = [];
+      for (const n of bools) {
+        const g = groups.find(g => s.cells.every(c => c.data.vals[n] !== '1' || g.every(o => c.data.vals[o] !== '1')));
+        if (g) g.push(n); else groups.push([n]);
+      }
+      const onehot = groups.filter(g => g.length > 1 && s.cells.every(c => g.some(n => c.data.vals[n] === '1')));
+      const grouped = new Set(onehot.flat());
+      onehot.forEach(g => AXES.push({kind: 'K1', site, names: g, name: g.join(' / '), id: 'K1:' + site + ':' + g.join('/'), data: s.data}));
+      names.filter(n => !grouped.has(n)).forEach(n => AXES.push({kind: 'K', site, name: n, id: 'K:' + site + ':' + n, data: s.data}));
+    }
+    else if (names.length) rawCoords = true;
+  }
+  const charsDiffer = analyses.some(a => {
+    const m = new Map();
+    for (const c of a.cells) { const k = AXES.map(ax => axisValue(c, ax)).join('|'); if (m.has(k) && m.get(k) !== c.ch) return true; m.set(k, c.ch); }
+    return false;
+  });
+  if (rawCoords || charsDiffer) AXES.push({kind: 'C', id: 'C'});
+  for (const a of analyses) {
+    a.regions = new Map();
+    for (const cell of a.cells) {
+      cell.axis = AXES.map(ax => axisValue(cell, ax));
+      cell.sig = AXES.length ? AXES.map((ax, i) => ax.id + '=' + cell.axis[i]).join('|') : cell.frames.map(f => f.f + ':' + f.l).join('>');
+      let R = a.regions.get(cell.sig);
+      if (!R) a.regions.set(cell.sig, R = {sig: cell.sig, frames: cell.frames, data: cell.data, axis: cell.axis, chars: new Set(), cells: [], classes: new Set()});
+      R.chars.add(cell.ch); R.cells.push(cell); R.classes.add(cell.cls);
+    }
+  }
+}
+function axisDep(a, i) {
+  const byRow = new Map(), byCol = new Map();
+  for (const c of a.cells) {
+    (byRow.get(c.r) || byRow.set(c.r, new Set()).get(c.r)).add(c.axis[i]);
+    (byCol.get(c.c) || byCol.set(c.c, new Set()).get(c.c)).add(c.axis[i]);
+  }
+  const rowOnly = [...byRow.values()].every(s => s.size === 1), colOnly = [...byCol.values()].every(s => s.size === 1);
+  return rowOnly && !colOnly ? 'row' : colOnly && !rowOnly ? 'column' : rowOnly && colOnly ? 'nothing' : 'cell';
+}
+function depText(dep) {
+  return {row: 'depends on the row', column: 'depends on the column', cell: 'depends on both row and column', nothing: 'the same everywhere here'}[dep];
+}
+function axisName(ax) {
+  if (ax.kind === 'P') return `the branch taken in <b>${esc(ax.fn)}</b>`;
+  if (ax.kind === 'K' || ax.kind === 'K1') return `<code>${esc(ax.name)}</code>`;
+  return 'the char itself';
+}
+function axisLabel(ax, val, a) {
+  if (val === '–') return {why: '–', how: ''};
+  if (ax.kind === 'P') {
+    const v = splitPV(val);
+    return {why: (ax.fns.length > 1 ? v.fn + ': ' : '') + chainText(a.T, v.f, v.l), how: srcLine(a.T, v.f, v.l)};
+  }
+  if (ax.kind === 'K' || ax.kind === 'K1') {
+    const name = ax.kind === 'K1' ? val : ax.name, want = ax.kind === 'K1' ? '1' : val;
+    const cell = a.cells.find(c => c.data && c.data.vals[name] === want);
+    const def = cell && cell.data.defs[name];
+    return {why: ax.kind === 'K1' ? `${name} is 1` : `${name} = ${val}`, how: def ? (def.param ? 'parameter' : (def.chain !== 'always' ? def.chain + '  →  ' : '') + def.text) : ''};
+  }
+  return {why: `'${showCh(val)}'`, how: ''};
+}
+function sortVals(ax, vals) {
+  if (ax.kind === 'K1') return [...vals].sort((p, q) => ax.names.indexOf(p) - ax.names.indexOf(q));
+  return [...vals].sort((p, q) => {
+    if (ax.kind === 'P') { const a = splitPV(p), b = splitPV(q); return a && b ? (a.fn === b.fn ? a.l - b.l : ax.fns.indexOf(a.fn) - ax.fns.indexOf(b.fn)) : 0; }
+    const np = parseFloat(p), nq = parseFloat(q);
+    return !isNaN(np) && !isNaN(nq) ? np - nq : String(p).localeCompare(String(q));
+  });
+}
+function originOf(T, region) {
+  const ch = [...region.chars][0];
+  const lit = ch === "'" ? "'\\''" : ch === '\\' ? "'\\\\'" : `'${ch}'`;
+  for (const f of region.frames) {
+    const s = srcLine(T, f.f, f.l);
+    if (s.includes(lit)) return {f, s, lit};
+    const strs = s.match(/"(?:\\.|[^"\\])*"/g) || [];
+    if (strs.some(x => x.includes(ch))) return {f, s, lit: strs.find(x => x.includes(ch))};
+  }
+  return null;
+}
+function color(sig) {
+  if (!COLORS.has(sig)) COLORS.set(sig, PALETTE[COLORS.size % PALETTE.length]);
+  return COLORS.get(sig);
+}
+function bg(sig) { return `color-mix(in srgb, ${color(sig)} 30%, var(--panel))`; }
+function pathHtml(T, region) {
+  const parts = AXES.map((ax, i) => {
+    const v = region.axis ? region.axis[i] : '–';
+    if (v === '–' || ax.kind === 'C') return '';
+    if (ax.kind === 'P') { const pv = splitPV(v); return `<span class="chip" title="${esc(pv.f + ':' + pv.l + '  ' + srcLine(T, pv.f, pv.l))}">${esc(pv.fn)}: ${esc(chainText(T, pv.f, pv.l))}</span>`; }
+    return ax.kind === 'K1' ? `<span class="chip">${esc(v)} is 1</span>` : `<span class="chip">${esc(ax.name)} = ${esc(v)}</span>`;
+  }).filter(Boolean);
+  if (!parts.length) parts.push(...region.frames.slice(0, -1).map(f => `<span class="chip">${esc(f.fn)}: ${esc(chainText(T, f.f, f.l))}</span>`));
+  return parts.join('<span class="arrow">→</span>') + `<span class="arrow">→</span><b>'${esc([...region.chars].map(showCh).join("', '"))}'</b>`;
+}
+
+// ---------------------------------------------------------------- rendering: the idea
+function charMap(a, opts = {}) {
+  const size = opts.size || (a.cols > 30 || a.rows > 20 ? 14 : a.cols > 14 ? 20 : 30);
+  const exp = opts.expected ? opts.expected.split('\n') : null;
+  const grid = [];
+  for (const cell of a.cells) (grid[cell.r] ||= [])[cell.c] = cell;
+  let h = `<div class="cmap" style="grid-template-columns:repeat(${Math.max(a.cols, 1)},${size}px);grid-auto-rows:${size}px;font-size:${Math.round(size * .55)}px">`;
+  for (let r = 0; r < a.rows; r++) for (let c = 0; c < a.cols; c++) {
+    const cell = (grid[r] || [])[c];
+    if (!cell) { h += '<div class="c blank"></div>'; continue; }
+    const wrong = exp && (exp[r] || '')[c] !== cell.ch;
+    const txt = opts.value ? opts.value(cell) : showCh(cell.ch);
+    const style = opts.color ? opts.color(cell) : bg(cell.sig);
+    h += `<div class="c${wrong ? ' wrong' : ''}" data-sig="${esc(cell.sig)}" data-step="${cell.step}" data-r="${r}" data-c="${c}" style="background:${style}">${esc(txt)}</div>`;
+  }
+  return h + '</div>';
+}
+
+function matrixHtml(axR, axC, iR, iC, sources) {
+  const vals = i => sortVals(AXES[i], new Set(sources.flatMap(a => a.cells.map(c => c.axis[i]))));
+  const rows = vals(iR), cols = vals(iC);
+  const regAt = (rv, cv) => sources.flatMap(a => [...a.regions.values()]).find(R => R.axis[iR] === rv && R.axis[iC] === cv);
+  const ref = sources[0];
+  return `<table class="mx"><tr><th><span class="axis">${axR.kind === 'P' ? 'row rule' : esc(axR.name || '')} ↓ · ${axC.kind === 'P' ? 'column rule' : esc(axC.name || '')} →</span></th>` +
+    cols.map(cv => { const L = axisLabel(axC, cv, ref); return `<th><span class="why">${esc(L.why)}</span><span class="how">${esc(L.how)}</span></th>`; }).join('') + '</tr>' +
+    rows.map(rv => { const L = axisLabel(axR, rv, ref);
+      return `<tr><th class="rowh"><span class="why">${esc(L.why)}</span><span class="how">${esc(L.how)}</span></th>` +
+        cols.map(cv => { const R = regAt(rv, cv);
+          return R ? `<td data-sig="${esc(R.sig)}" style="background:${bg(R.sig)}">${esc([...R.chars].map(showCh).join(''))}<small>${esc([...R.classes].join(', '))}</small></td>` : '<td class="none"></td>';
+        }).join('') + '</tr>'; }).join('') + '</table>';
+}
+
+function keyMaps(src) {
+  // for every computed key: a small map of its value over the rectangle + where it is set
+  const out = [];
+  AXES.forEach((ax, i) => {
+    if (ax.kind !== 'K' && ax.kind !== 'K1') return;
+    const vals = sortVals(ax, new Set(src.cells.map(c => c.axis[i])));
+    const hue = v => PALETTE[(vals.indexOf(v) + 6) % PALETTE.length];
+    const defs = new Map();
+    for (const c of src.cells) {
+      const nm = ax.kind === 'K1' ? c.axis[i] : ax.name;
+      const d = c.data && c.data.defs[nm];
+      if (!d) continue;
+      const k = d.param ? 'parameter' : d.f + ':' + d.l;
+      if (!defs.has(k)) defs.set(k, {d, vals: new Set()});
+      defs.get(k).vals.add(c.axis[i]);
+    }
+    const defHtml = [...defs.values()].map(({d, vals: vs}) => d.param ? `<div class="where">passed in as a parameter</div>` :
+      `<div class="where">${d.chain !== 'always' ? `when <code>${esc(d.chain)}</code>: ` : ''}<code>${esc(d.text)}</code> <span class="dim">${esc(d.f)}:${d.l}</span> → ${[...vs].map(esc).join(', ')}</div>`).join('');
+    out.push(`<div class="one" style="max-width:360px"><span class="lbl">${esc(ax.name)} <span class="dim">(${depText(axisDep(src, i))})</span></span>
+      ${charMap(src, {size: 22, value: c => c.axis[i], color: c => `color-mix(in srgb, ${hue(c.axis[i])} 28%, var(--panel))`})}${defHtml}</div>`);
+  });
+  return out.length ? `<div class="origin"><b>Where the keys come from</b><div class="sizes" style="margin-top:8px">${out.join('')}</div></div>` : '';
+}
+
+function renderIdea() {
+  const regs = [...A.regions.values()];
+  const canon = ALL.find(a => a.x === 6 && a.y === 5) || A;
+  const sources = [canon, A].filter((v, i, s) => s.indexOf(v) === i);
+  const ax = AXES.map((x, i) => ({x, i})).filter(({x, i}) => x.kind !== 'C'
+    && sources.some(a => new Set(a.cells.map(c => c.axis[i])).size > 1));
+  const sites = [...new Map(AXES.filter(x => x.kind === 'K' || x.kind === 'K1').map(x => [x.site, x.data])).values()];
+  const computed = sites.map(d => `the char is <b>computed</b> by <code>${esc(d.expr)}</code> in <b>${esc(d.fn)}</b> <span class="dim">(${esc(d.f)}:${d.l})</span>`);
+  const deps = ax.map(({x, i}) => `${axisName(x)} <span class="dim">(${depText(axisDep(canon, i))})</span>`);
+  let lead, rules;
+  if (ax.length === 2) {
+    lead = `<p class="lead">${computed.length ? computed.join('; ') + '. ' : ''}Two things decide each char: ${deps.join(' and ')}. The char is where they cross.</p>`;
+    rules = matrixHtml(ax[0].x, ax[1].x, ax[0].i, ax[1].i, sources);
+  } else {
+    if (ax.length === 1) lead = `<p class="lead">${computed.length ? computed.join('; ') + '. ' : ''}One thing decides each char: ${deps[0]}.</p>`;
+    else if (ax.length > 2) lead = `<p class="lead">${computed.length ? computed.join('; ') + '. ' : ''}${ax.length} things decide each char: ${deps.join(', ')}.</p>`;
+    else lead = `<p class="lead">No branch and no variable decides the chars: they come out in a fixed order${regs.some(R => R.chars.size > 1) ? ' (hardcoded text, or decided where the tool cannot see)' : ''}.</p>`;
+    rules = regs.map(R => {
+      const o = originOf(A.T, R);
+      return `<div class="rule" data-sig="${esc(R.sig)}"><div class="sw" style="background:${bg(R.sig)}">${esc([...R.chars].map(showCh).join('').slice(0, 3))}</div>
+        <div><div class="path">${pathHtml(A.T, R)}</div><div class="where">${esc([...R.classes].join(', '))} · ${R.cells.length} cell(s)</div>
+        ${o ? `<div class="where">from <code>${esc(o.lit)}</code> in ${esc(o.f.f)}:${o.f.l}</div>` : ''}</div></div>`;
+    }).join('');
+  }
+  const byLine = new Map();
+  for (const R of regs) { const o = originOf(A.T, R); if (!o) continue; const k = o.f.f + ':' + o.f.l; if (!byLine.has(k)) byLine.set(k, o); }
+  const originHtml = ax.length === 2 && byLine.size && !sites.length ? `<div class="origin dim">The chars themselves are written in: ${[...byLine.values()].map(o =>
+      `<code>${esc(o.s)}</code> <span class="dim">(${esc(o.f.f)}:${o.f.l})</span>`).join(' · ')}</div>` : '';
+  return `<section><h2>The idea — how each cell gets its char</h2><div class="idea">
+    <div class="panel">${lead}<div style="overflow:auto">${rules}</div>${originHtml}${keyMaps(A.cells.length ? A : canon)}</div>
+    <div class="panel"><div class="outhead">rush(${A.x}, ${A.y}): each cell colored by what decided it
+      ${A.T.expected != null ? (A.T.output === A.T.expected ? ' · <span class="st ok">matches subject</span>' : ' · <span class="st bad">red outline = differs from subject</span>') : ''}</div>
+      <div class="mapwrap mainmap">${A.cells.length ? charMap(A, {expected: A.T.expected}) : nothingWhy(A.T)}</div></div>
+  </div></section>`;
+}
+
+function nothingWhy(T) {
+  const st = T.steps.find(s => s.cond === true && (T.control || {})[s.f + ':' + s.l]);
+  if (!st) return '<span class="dim">(prints nothing)</span>';
+  const c = T.control[st.f + ':' + st.l], v = subst(c.cond, (st.stack[0] || {}).vars);
+  return `<div>Prints nothing: <code>${esc(c.cond)}</code>${v ? ` with ${esc(v)}` : ''} is <span class="st ok">true</span> at ${esc(st.f)}:${st.l} in <code>${esc(c.fn)}</code>, so it stops there.</div>`;
+}
+
+function renderSizes() {
+  const decs = deciders(ALL);
+  const canon = ALL.find(a => a.x === 6 && a.y === 5);
+  const canonSigs = new Set(canon ? canon.regions.keys() : []);
+  const parts = ALL.filter(a => SIZES.some(([x, y]) => x === a.x && y === a.y)).map(a => {
+    const special = [...a.regions.values()].filter(R => canon && !canonSigs.has(R.sig));
+    const flags = special.map(R => `<div class="flag">⚑ ${esc([...R.classes].join(', '))}: own path ${pathHtml(a.T, R, decs)}</div>`).join('');
+    return `<div class="one"><span class="lbl">rush(${a.x}, ${a.y})</span>${a.cells.length ? charMap(a, {size: 20, expected: a.T.expected}) : '<span class="dim">(nothing)</span>'}${flags}</div>`;
+  }).join('');
+  return `<section><h2>Same code, other sizes</h2><div class="panel"><div class="sizes">${parts}</div>
+    <p class="dim" style="margin:12px 0 0">Same colors = same decision path. A ⚑ marks a path that the general case (6×5) never takes: a special case, maybe hardcoded.</p></div></section>`;
+}
+
+function loopValues(T) {
+  const out = [];
+  for (const [key, ctl] of Object.entries(T.control || {})) {
+    if (ctl.kind !== 'while') continue;
+    const [f, l] = key.split(':'); const line = +l;
+    const ids = (ctl.cond.match(/[A-Za-z_]\w*/g) || []).filter(id => !KW.has(id));
+    const visits = [];
+    let callDepth = null;
+    for (const s of T.steps) {
+      if (s.f !== f || s.l !== line) continue;
+      if (callDepth === null) callDepth = s.stack.length;
+      if (s.stack.length !== callDepth || (visits.length && s.stack[0].vars === undefined)) continue;
+      visits.push({vars: s.stack[0].vars, cond: s.cond});
+      if (s.cond === false) break;
+    }
+    if (!visits.length) continue;
+    const v = ids.find(id => new Set(visits.map(x => fmt(x.vars[id]))).size > 1) || ids[0];
+    out.push({fn: ctl.fn, cond: ctl.cond, line, var: v, visits});
+  }
+  return out;
+}
+
+function renderQuestions() {
+  const decs = deciders(ALL);
+  const qs = [];
+  const by = (x, y) => ALL.find(a => a.x === x && a.y === y);
+  const one = (a, which) => {
+    if (!a) return;
+    const R = [...a.regions.values()].find(R => [...R.classes].some(c => c.includes(which === 'col' ? '1 column' : '1 row') || c === 'the single cell'));
+    if (!R) return;
+    const fn = which === 'col' ? decs[decs.length - 1] : decs[0];
+    const f = fn && frameOf(R, fn); if (!f) return;
+    const d = decisionOf(a.T, f.f, f.l);
+    if (d && d.rest && d.rest.length) {
+      const what = which === 'col' ? 'With x = 1 the only column is both the first and the last one' : 'With y = 1 the only row is both the first and the last one';
+      qs.push(`${what}. Their code printed <b>'${esc([...R.chars].map(showCh).join("', '"))}'</b> through <code>${esc(condText(d))}</code> in <code>${esc(fn)}</code>. Why not <code>${esc(d.rest[0])}</code>? <span class="dim">(order of the checks decides)</span>`);
+    }
+  };
+  one(by(1, 5), 'col'); one(by(5, 1), 'row');
+  for (const L of loopValues(T).slice(0, 2)) {
+    const vals = L.visits.map(v => (v.cond === false ? '<b>' : '') + esc(fmt(v.vars[L.var])) + (v.cond === false ? '</b>' : '')).join(', ');
+    qs.push(`In <code>${esc(L.fn)}</code>, <code>while (${esc(L.cond)})</code>: what values does <code>${esc(L.var)}</code> take for rush(${A.x}, ${A.y})? <span class="vals">answer: ${vals}</span> <span class="dim">(bold = the check that stops the loop)</span>`);
+  }
+  if (decs.length) {
+    const R = [...A.regions.values()].find(R => R.classes.has('bottom-right corner')) || [...A.regions.values()][0];
+    if (R) qs.push(`Point at the <b>${esc([...R.classes][0])}</b> of rush(${A.x}, ${A.y}). Which conditions are true when it is printed? <span class="dim">answer: ${pathHtml(A.T, R, decs)}</span>`);
+  }
+  const putc = A.T.steps.reduce((n, s) => n + (s.w || []).length, 0);
+  qs.push(`How many times is <code>write</code> called for rush(${A.x}, ${A.y})? <span class="dim">answer: ${putc} (${A.cells.length} chars + ${A.newlines.length} newlines${putc !== A.cells.length + A.newlines.length ? ', some writes print several bytes' : ''})</span>`);
+  qs.push(`What happens for rush(0, 3) or rush(-2, 4), and which line decides it? <span class="dim">(try it with the size box above)</span>`);
+  return `<section><h2>Questions that test the idea</h2><div class="panel"><ol class="qs">${qs.map(q => `<li>${q}</li>`).join('')}</ol></div></section>`;
+}
+
+// ---------------------------------------------------------------- rendering: watch it run
+let cur = 0, timer = null;
+function renderRunShell() {
+  return `<section id="run"><h2>Watch it run</h2>
+  <div class="controls"><button id="first" title="start (Home)">⏮</button><button id="prev" title="back (←)">◀</button>
+    <button id="play" class="primary" title="play / pause (space)">▶ play</button><button id="next" title="forward (→)">▶</button><button id="last" title="end (End)">⏭</button>
+    <span class="dim">by</span><select id="gran"><option value="char">char</option><option value="row">row</option><option value="line">line</option></select>
+    <span class="dim">speed</span><input id="speed" type="range" min="1" max="10" value="5" style="flex:none;width:90px">
+    <input id="scrub" type="range" min="0" value="0"><span id="count" class="dim mono"></span></div>
+  <div class="narr" id="narr"></div>
+  <div class="runcols"><div class="panel code" id="code" style="padding:6px 0"></div><div class="frames" id="frames"></div>
+  <div class="panel"><div class="outhead" id="outhead"></div><div class="mapwrap" id="out"></div></div></div>
+  <p class="dim" style="font-size:12px">keys: <kbd>space</kbd> play · <kbd>←</kbd><kbd>→</kbd> step · click a cell anywhere to jump to the moment it was printed</p></section>`;
+}
+function setupRun() {
+  const T0 = A.T, steps = T0.steps;
+  const ran = new Set(steps.map(s => s.f + ':' + s.l));
+  const fns = T0.funcs.filter(fn => steps.some(s => s.f === fn.file && s.l >= fn.line && s.l <= fn.end));
+  const order = fn => steps.findIndex(s => s.f === fn.file && s.l >= fn.line && s.l <= fn.end);
+  fns.sort((p, q) => order(p) - order(q));
+  let h = '';
+  for (const fn of fns) {
+    h += `<div class="fnh">${esc(fn.name)} · ${esc(fn.file)}</div>`;
+    for (let l = fn.line; l <= fn.end; l++) {
+      h += `<div class="ln${ran.has(fn.file + ':' + l) ? ' ran' : ''}" data-k="${esc(fn.file + ':' + l)}"><span class="no">${l}</span><span class="hits"></span><span class="tx">${esc((T0.files[fn.file] || [])[l - 1] || '')}</span><span class="b"></span></div>`;
+    }
+  }
+  $('#code').innerHTML = h;
+  $('#scrub').max = Math.max(steps.length - 1, 0);
+  $('#out').innerHTML = A.cells.length ? charMap(A) : '<span class="dim">(prints nothing)</span>';
+  $('#first').onclick = () => go(0);
+  $('#last').onclick = () => go(steps.length - 1);
+  $('#prev').onclick = () => go(jump(-1));
+  $('#next').onclick = () => go(jump(1));
+  $('#scrub').oninput = e => go(+e.target.value);
+  $('#play').onclick = togglePlay;
+  go(0);
+}
+function jump(dir) {
+  const steps = A.T.steps, g = $('#gran').value;
+  const hit = k => {
+    const ws = (steps[k].w || []).filter(w => w.fd === 1);
+    if (g === 'char') return ws.length > 0;
+    if (g === 'row') return ws.some(w => w.d.includes('\n'));
+    return true;
+  };
+  for (let k = cur + dir; k >= 0 && k < steps.length; k += dir) if (hit(k)) return k;
+  return dir > 0 ? steps.length - 1 : 0;
+}
+function togglePlay() {
+  if (timer) { clearInterval(timer); timer = null; $('#play').textContent = '▶ play'; return; }
+  if (cur >= A.T.steps.length - 1) go(0);
+  $('#play').textContent = '⏸ pause';
+  const tick = () => { if (cur >= A.T.steps.length - 1) return togglePlay(); go(jump(1)); };
+  const sp = +$('#speed').value;
+  timer = setInterval(tick, Math.round(1400 / sp));
+}
+$('#main').addEventListener('input', e => { if (e.target.id === 'speed' && timer) { togglePlay(); togglePlay(); } });
+
+function subst(cond, vars) {
+  const ids = [...new Set((cond.match(/[A-Za-z_]\w*/g) || []).filter(id => !KW.has(id) && vars && id in vars))];
+  return ids.map(id => `${id} = ${fmt(vars[id])}`).join(', ');
+}
+function narrate(k) {
+  const T0 = A.T, s = T0.steps[k], nx = T0.steps[k + 1];
+  const fr = s.stack[0] || {fn: '?', vars: {}};
+  const line = srcLine(T0, s.f, s.l);
+  const ctl = (T0.control || {})[s.f + ':' + s.l];
+  let out = '';
+  if (ctl && ctl.kind !== 'else') {
+    const sv = subst(ctl.cond, fr.vars), res = s.cond;
+    const yes = res === true ? '<span class="yes">true</span>' : res === false ? '<span class="no">false</span>' : '…';
+    if (ctl.kind === 'while') out = `Loop check <code>${esc(ctl.cond)}</code>${sv ? ` with ${esc(sv)}` : ''} → ${yes}` + (res === true ? ': run the loop body (again).' : res === false ? ': the loop is over.' : '.');
+    else out = `Check <code>${esc(ctl.cond)}</code>${sv ? ` with ${esc(sv)}` : ''} → ${yes}` + (res === true ? ': take this branch.' : res === false ? ': skip it.' : '.');
+  } else if (ctl && ctl.kind === 'else') out = 'No earlier check was true, so the <code>else</code> branch runs.';
+  else if (nx && nx.stack.length > s.stack.length) {
+    const callee = nx.stack[0], fn = T0.funcs.find(f => f.name === callee.fn);
+    const pn = fn ? fn.params.map(p => (p.match(/([A-Za-z_]\w*)\s*$/) || [])[1]).filter(Boolean) : [];
+    out = `Call <code>${esc(callee.fn)}(${pn.map(p => esc(p) + ' = ' + esc(fmt(callee.vars[p]))).join(', ')})</code>.`;
+  } else if (/^return\b/.test(line)) out = `<code>${esc(line)}</code>: leave <code>${esc(fr.fn)}</code>.`;
+  else if (line === '}' || line === '{') out = nx && nx.stack.length < s.stack.length ? `<code>${esc(fr.fn)}</code> is done, back in <code>${esc(nx.stack[0] ? nx.stack[0].fn : 'main')}</code>.` : `<code>${esc(fr.fn)}</code> starts.`;
+  else out = `<code>${esc(line)}</code>`;
+  if (nx && nx.stack.length === s.stack.length && nx.stack[0] && nx.stack[0].fn === fr.fn) {
+    const ch = Object.keys(fr.vars).filter(v => fmt(fr.vars[v]) !== fmt(nx.stack[0].vars[v]));
+    if (ch.length && !ctl) out += ` → ${ch.map(v => `<code>${esc(v)}</code> becomes <b>${esc(fmt(nx.stack[0].vars[v]))}</b>`).join(', ')}`;
+  }
+  const ws = (s.w || []).filter(w => w.fd === 1);
+  if (ws.length) {
+    const before = A.cells.filter(c => c.step < k).length, nlBefore = A.newlines.filter(n => n.step < k).length;
+    const txt = ws.map(w => w.d).join('');
+    if (txt === '\n') out += ` → prints a newline: row ${nlBefore + 1} is finished.`;
+    else {
+      const cell = A.cells.find(c => c.step === k);
+      out += ` → prints <b>'${esc(txt.replace(/\n/g, '\\n'))}'</b>` + (cell ? ` at row ${cell.r + 1}, column ${cell.c + 1} (${esc(cell.cls)}).` : '.');
+    }
+  }
+  return out;
+}
+function go(k) {
+  const T0 = A.T, steps = T0.steps;
+  if (!steps.length) { $('#narr').textContent = 'Nothing ran: the entry function returned at once or crashed.'; return; }
+  cur = Math.max(0, Math.min(k, steps.length - 1));
+  const s = steps[cur], after = steps[cur + 1] || s;
+  $('#scrub').value = cur;
+  $('#count').textContent = `step ${cur + 1}/${steps.length}`;
+  $('#narr').innerHTML = narrate(cur);
+  const hits = new Map();
+  for (let i = 0; i <= cur; i++) { const key = steps[i].f + ':' + steps[i].l; hits.set(key, (hits.get(key) || 0) + 1); }
+  const nk = cur + 1 < steps.length ? steps[cur + 1].f + ':' + steps[cur + 1].l : null;
+  for (const el of $('#code').querySelectorAll('.ln')) {
+    const key = el.dataset.k;
+    el.classList.toggle('cur', key === s.f + ':' + s.l);
+    el.classList.toggle('next', key === nk && key !== s.f + ':' + s.l);
+    el.querySelector('.hits').textContent = hits.get(key) ? '×' + hits.get(key) : '';
+    const b = el.querySelector('.b');
+    if (key === s.f + ':' + s.l && s.cond !== undefined && s.cond !== null) b.innerHTML = `<span class="badge ${s.cond ? 't' : 'f'}">${s.cond ? 'true' : 'false'}</span>`;
+    else b.innerHTML = '';
+  }
+  const curEl = $('#code .ln.cur');
+  if (curEl) { const box = $('#code'), top = curEl.offsetTop - box.offsetTop; if (top < box.scrollTop || top > box.scrollTop + box.clientHeight - 30) box.scrollTop = top - 80; }
+  // frames: state after this line ran
+  const prevStack = s.stack;
+  // a local is "not set yet" until a line of this call has assigned it
+  const assigned = (fnName, depthFromBottom, name) => {
+    const re = new RegExp('(^|[^\\w.>])' + name + '\\s*(=(?!=)|\\+\\+|--|\\+=|-=)|(\\+\\+|--)' + name + '\\b');
+    for (let i = cur; i >= 0; i--) {
+      const st = steps[i];
+      if (st.stack.length < depthFromBottom) return false;
+      if (st.stack.length === depthFromBottom && st.stack[0].fn === fnName && re.test(srcLine(T0, st.f, st.l))) return true;
+    }
+    return false;
+  };
+  $('#frames').innerHTML = after.stack.map((f, i) => {
+    const old = prevStack.find((p, j) => p.fn === f.fn && prevStack.length - j === after.stack.length - i);
+    const fn = T0.funcs.find(x => x.name === f.fn);
+    const pnames = new Set(fn ? fn.params.map(p => (p.match(/([A-Za-z_]\w*)\s*$/) || [])[1]) : []);
+    const rows = Object.entries(f.vars || {}).map(([k2, v]) => {
+      const chg = old && fmt(old.vars[k2]) !== fmt(v);
+      const unset = !pnames.has(k2) && !assigned(f.fn, after.stack.length - i, k2);
+      if (unset) return `<tr><td class="k">${esc(k2)}</td><td class="dim" title="garbage value: ${esc(fmt(v))}">not set yet</td></tr>`;
+      return `<tr><td class="k">${esc(k2)}${pnames.has(k2) ? '<span class="tag">param</span>' : ''}</td><td class="${chg ? 'chg' : ''}">${esc(fmt(v))}</td></tr>`;
+    }).join('');
+    return `<div class="frame${i === 0 ? ' top' : ''}"><div class="fh">${esc(f.fn)} <span>${esc(f.f)}:${f.l}${i === 0 ? '' : ' (waiting for the call above)'}</span></div><table>${rows}</table></div>`;
+  }).join('') || '<div class="dim">back in the harness main</div>';
+  // output so far
+  for (const el of $('#out').querySelectorAll('.c[data-step]')) {
+    const st = +el.dataset.step;
+    el.classList.toggle('pending', st > cur);
+    el.classList.toggle('just', st === cur);
+  }
+  const nchars = A.cells.filter(c => c.step <= cur).length, nl = A.newlines.filter(n => n.step <= cur).length;
+  $('#outhead').textContent = `output so far: ${nchars} char(s), ${nl} newline(s)`;
+}
+
+// ---------------------------------------------------------------- page
+function bindMaps() {
+  const tip = $('#tip');
+  document.querySelectorAll('[data-sig]').forEach(el => {
+    el.addEventListener('mouseenter', e => {
+      const sig = el.dataset.sig;
+      document.querySelectorAll('.cmap .c[data-sig]').forEach(c => c.classList.toggle('dimmed', c.dataset.sig !== sig));
+      const a = ALL.find(a => a.regions.has(sig)) || A, R = a.regions.get(sig);
+      const cellInfo = el.dataset.r !== undefined ? `row ${+el.dataset.r + 1}, column ${+el.dataset.c + 1} · ` : '';
+      const viaBuf = (R.cells.some(c => c.stored != null) ? '<br><i>stored in memory first, printed later by one write</i>' : '') +
+        (R.data && Object.keys(R.data.vals).length ? `<br>computed: <code>${esc(R.data.expr)}</code> with ${Object.entries(R.data.vals).map(([k, v]) => `<code>${esc(k)} = ${esc(v)}</code>`).join(', ')}` : '');
+      tip.innerHTML = `${cellInfo}${esc([...R.classes].join(', '))}<br>` + R.frames.map(f => {
+        const tx = chainText(a.T, f.f, f.l);
+        return `<code>${esc(f.fn)}</code> ${tx !== 'always' ? 'because <code>' + esc(tx) + '</code>' : ''} → <code>${esc(srcLine(a.T, f.f, f.l))}</code>`;
+      }).join('<br>') + viaBuf;
+      tip.hidden = false;
+    });
+    el.addEventListener('mousemove', e => { tip.style.left = Math.min(e.clientX + 14, innerWidth - 460) + 'px'; tip.style.top = (e.clientY + 16) + 'px'; });
+    el.addEventListener('mouseleave', () => { tip.hidden = true; document.querySelectorAll('.cmap .c.dimmed').forEach(c => c.classList.remove('dimmed')); });
+  });
+  document.querySelectorAll('.cmap .c[data-step]').forEach(el => el.addEventListener('click', () => {
+    const inRun = el.closest('#run');
+    const fromCurrent = el.closest('.idea') || inRun;
+    if (!fromCurrent) {
+      const box = el.closest('.one'); const lbl = box && box.querySelector('.lbl').textContent.match(/-?\d+/g);
+      if (lbl) { X = +lbl[0]; Y = +lbl[1]; $('#x').value = X; $('#y').value = Y; load(); }
+      return;
+    }
+    if (timer) togglePlay();
+    go(+el.dataset.step);
+    if (!inRun) $('#run').scrollIntoView({behavior: 'smooth'});
+  }));
+}
+
+async function load() {
+  history.replaceState(null, '', `?rush=${RUSH ?? ''}&x=${X}&y=${Y}`);
+  $('#status').innerHTML = '<span class="spin"></span> tracing…';
+  if (timer) togglePlay();
+  try {
+    const sizes = [...SIZES];
+    if (!sizes.some(([x, y]) => x === X && y === Y)) sizes.push([X, Y]);
+    const traces = await Promise.all(sizes.map(([x, y]) => getTrace(x, y)));
+    T = traces[sizes.findIndex(([x, y]) => x === X && y === Y)];
+    if (RUSH === null) RUSH = T.rush;
+    ALL = traces.map(analyze);
+    A = ALL.find(a => a.x === X && a.y === Y);
+    finalize(ALL);
+    COLORS = new Map();
+    const canon = ALL.find(a => a.x === 6 && a.y === 5);
+    for (const a of [canon, A, ...ALL]) if (a) for (const R of a.regions.values()) color(R.sig);
+    const warn = T.truncated ? '<div class="panel err">The trace was cut short (too many steps): an infinite loop?</div>' :
+      T.signal ? `<div class="panel err">The program crashed: ${esc(T.signal)}</div>` : '';
+    $('#main').innerHTML = warn + renderIdea() + renderSizes() + renderQuestions() + renderRunShell();
+    bindMaps(); setupRun();
+    $('#status').textContent = `${T.steps.length} steps traced`;
+  } catch (e) {
+    $('#main').innerHTML = `<div class="panel err">${esc(e.message)}</div>`;
+    $('#status').textContent = '';
+  }
+}
+
+async function header() {
+  $('#team').textContent = TEAM;
+  $('#reportlink').href = '/report/' + encodeURIComponent(TEAM);
+  document.title = TEAM + ' · algorithm';
+  try {
+    const st = await api('/api/state');
+    const t = st.teams.find(t => t.name === TEAM);
+    const s = t && t.summary;
+    if (s) {
+      $('#verdict').innerHTML = `<span class="pill ${s.verdict[0]}">${esc(s.verdict[1])}</span>`;
+      if (RUSH === null) RUSH = s.assigned ?? +Object.keys(s.rushes)[0];
+      $('#rtabs').innerHTML = Object.keys(s.rushes).sort().map(n =>
+        `<button type="button" data-n="${n}" class="${+n === RUSH ? 'on' : ''}">rush0${n}${+n === s.assigned ? ' ★' : ''}</button>`).join('');
+      $('#rtabs').onclick = e => { const b = e.target.closest('[data-n]'); if (!b) return; RUSH = +b.dataset.n;
+        $('#rtabs').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); load(); };
+    }
+  } catch (e) { /* state is optional */ }
+  $('#presets').innerHTML = [[1, 1], [5, 1], [1, 5], [2, 2], [4, 4], [5, 3], [10, 6], [0, 3]].map(([x, y]) => `<button type="button" data-x="${x}" data-y="${y}">${x}×${y}</button>`).join('');
+  $('#presets').onclick = e => { const b = e.target.closest('[data-x]'); if (!b) return; X = +b.dataset.x; Y = +b.dataset.y; $('#x').value = X; $('#y').value = Y; load(); };
+  $('#x').value = X; $('#y').value = Y;
+  $('#go').onclick = () => { X = +$('#x').value; Y = +$('#y').value; load(); };
+  [$('#x'), $('#y')].forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') $('#go').click(); }));
+  document.addEventListener('keydown', e => {
+    if (!A || ['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+    if (e.key === ' ') { e.preventDefault(); togglePlay(); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); go(jump(1)); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); go(jump(-1)); }
+    else if (e.key === 'Home') go(0);
+    else if (e.key === 'End') go(A.T.steps.length - 1);
+  });
+  await load();
+}
+header();
+</script>
+</body></html>

@@ -1,0 +1,4 @@
+rush=4
+correct=no
+algorithm=Top row ABC, middle rows B B, bottom row CBA, printed row by row with first/middle/last chars.
+bug=top row is printed as CBA instead of ABC (top-left and top-right swapped): every size with x>=1 and y>=1 DIFFERS

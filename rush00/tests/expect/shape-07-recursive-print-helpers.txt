@@ -1,0 +1,3 @@
+rush=1
+correct=yes
+algorithm=rush01.c has recursive rush_rows() calling print_row() in print.c, which recursively prints cells via pick_char() back in rush01.c

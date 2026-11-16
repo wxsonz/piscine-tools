@@ -1,0 +1,13 @@
+# Team code never goes in this repo: every rush's repo/ holds student submissions.
+repo/
+*/repo/
+# Generated: reports embed team source and local paths. Rebuild with the tool.
+reports/
+*/reports/
+# Local only
+.claude/
+.style-backup-*/
+__pycache__/
+*.pyc
+*.o
+a.out

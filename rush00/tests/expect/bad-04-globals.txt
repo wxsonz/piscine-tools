@@ -1,0 +1,3 @@
+rush=3
+correct=yes
+algorithm=Global variables g_x, g_y, g_row and g_col hold all state, and helpers cell_char and draw_cells read and write those globals instead of taking parameters.

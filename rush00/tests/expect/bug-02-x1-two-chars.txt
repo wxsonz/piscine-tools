@@ -1,0 +1,4 @@
+rush=1
+correct=no
+algorithm=Top row /*\, middle rows * *, bottom row \*/, printed column by column with a special case for the last column.
+bug=rush(1, 5) prints 2 chars per row (x == 1 prints first and last char): rush(1, 1), rush(1, 2), rush(1, 5) DIFFER

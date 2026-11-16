@@ -1,0 +1,3 @@
+rush=3
+correct=yes
+algorithm=each row pattern is a char string walked with index math (first, middle or last slot) and printed row by row

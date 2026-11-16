@@ -1,0 +1,3 @@
+rush=1
+correct=yes
+algorithm=Every cell is classified by nine independent if statements with no else, each re-testing row and column position from scratch (r == 0, r == y - 1, c == 0, c == x - 1) with long repeated conjunctions.

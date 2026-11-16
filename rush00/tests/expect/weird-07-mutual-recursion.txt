@@ -1,0 +1,3 @@
+rush=1
+correct=yes
+algorithm=mutual recursion: a column function recurses into a row function at end of line, which recurses back into the column function

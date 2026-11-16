@@ -1,0 +1,3 @@
+rush=4
+correct=yes
+algorithm=rush04.c implements rush() with a while-loop row/col pattern, every .c file includes rush.h which holds the prototypes

@@ -1,0 +1,4 @@
+rush=0
+correct=no
+algorithm=Top and bottom rows o-o, middle rows | |, newline after each row, loop over rows.
+bug=an extra empty line is printed after the last row: rush(5, 3) prints 4 lines ending in a blank line; every size with x>=1 and y>=1 DIFFERS

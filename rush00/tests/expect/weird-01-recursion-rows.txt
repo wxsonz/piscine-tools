@@ -1,0 +1,3 @@
+rush=0
+correct=yes
+algorithm=recursion everywhere: one recursive function prints a row char by char, another recurses row by row

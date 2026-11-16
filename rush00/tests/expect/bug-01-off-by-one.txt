@@ -1,0 +1,4 @@
+rush=0
+correct=no
+algorithm=Top and bottom rows print o-o, middle rows print | |, one row per loop iteration, printing column by column.
+bug=loop runs while i <= x so each row is one char too wide: rush(5, 3) prints "o----o" (6 chars), every size with x>=1 and y>=1 DIFFERS

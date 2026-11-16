@@ -1,0 +1,4 @@
+rush=2
+correct=no
+algorithm=Top row ABA, middle rows B B, bottom row CBC, row loop with a per-row call to print_row.
+bug=every middle row gets a trailing space (B B followed by a space): rush(5, 3), rush(1, 5), rush(10, 6) DIFFER; sizes with y <= 2 are unaffected

@@ -1,0 +1,3 @@
+rush=1
+correct=yes
+algorithm=builds the whole rectangle in a local char buffer and calls write once, falling back to row-by-row output when it would not fit

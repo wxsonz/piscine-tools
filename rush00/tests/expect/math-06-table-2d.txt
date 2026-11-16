@@ -1,0 +1,3 @@
+rush=0
+correct=yes
+algorithm=fill a 3x3 char array t[][] with the rush00 pattern at the start, then for each cell pick the row and column index with integer math and read t[row][col]

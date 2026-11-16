@@ -1,0 +1,3 @@
+rush=2
+correct=yes
+algorithm=One giant rush function decides every character through a 5-level nested if/else pyramid (sign checks, row kind, column kind) with redundant braces and repeated edge-column tests.

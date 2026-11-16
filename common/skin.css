@@ -1,0 +1,111 @@
+/* skin.css: the look shared by every rush tool (dashboard, visualizer, reports).
+   House system from ~/_research/design: 13.01 fluent-editorial, 12.02 tokens.
+   Dark luminous by default when the system is dark; light studio otherwise.
+   One accent (cobalt). ok / bad / warn are meanings, not decoration.
+   Fonts ship as files in rush00/tool/www/fonts (OFL). The second url() in each
+   src is for reports opened straight from disk (rush00/reports/*.html). */
+
+@font-face{font-family:"Inter";font-weight:100 900;font-display:swap;
+  src:url(/www/fonts/Inter-Variable.ttf) format("truetype"),url(../tool/www/fonts/Inter-Variable.ttf) format("truetype")}
+@font-face{font-family:"Instrument Serif";font-weight:400;font-display:swap;
+  src:url(/www/fonts/InstrumentSerif-Regular.ttf) format("truetype"),url(../tool/www/fonts/InstrumentSerif-Regular.ttf) format("truetype")}
+@font-face{font-family:"Instrument Serif";font-style:italic;font-weight:400;font-display:swap;
+  src:url(/www/fonts/InstrumentSerif-Italic.ttf) format("truetype"),url(../tool/www/fonts/InstrumentSerif-Italic.ttf) format("truetype")}
+@font-face{font-family:"JetBrains Mono";font-weight:100 800;font-display:swap;
+  src:url(/www/fonts/JetBrainsMono-Variable.ttf) format("truetype"),url(../tool/www/fonts/JetBrainsMono-Variable.ttf) format("truetype")}
+
+/* ---- tokens: light studio -------------------------------------------- */
+:root{
+  --bg:#EEF2F7; --panel:#FFFFFF; --glass:rgba(255,255,255,.70); --code:#F3F6FA; --chip:#E7ECF3;
+  --ink:#14161C; --dim:#5B6472; --line:#DCE2EA; --rim:rgba(255,255,255,.95);
+  --accent:#2563EB; --accent-fill:#2563EB; --on-accent:#F8FAFF;
+  --ok:#17864F; --bad:#C8102E; --warn:#A8620C;
+  --hl:#DCE7FB; --hlink:#1D4ED8;
+  --glow1:rgba(96,165,250,.30); --glow2:rgba(167,139,250,.20); --grain:.05;
+  --shadow:0 24px 48px -28px rgba(15,23,42,.22);
+  --serif:"Instrument Serif","Iowan Old Style",Georgia,serif;
+  --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+/* ---- tokens: dark luminous -------------------------------------------- */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#07080D; --panel:#10131B; --glass:rgba(16,19,27,.74); --code:#0B0D13; --chip:#181C25;
+  --ink:#F4F4F0; --dim:#8E9099; --line:#1F242E; --rim:rgba(255,255,255,.07);
+  --accent:#5B93F7; --accent-fill:#2563EB; --on-accent:#F4F4F0;
+  --ok:#4CC38A; --bad:#F0525E; --warn:#F2A65A;
+  --hl:#132342; --hlink:#9CC0FF;
+  --glow1:rgba(59,130,246,.13); --glow2:rgba(148,163,184,.07); --grain:.035;
+  --shadow:0 28px 56px -30px rgba(0,0,0,.85);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#07080D; --panel:#10131B; --glass:rgba(16,19,27,.74); --code:#0B0D13; --chip:#181C25;
+  --ink:#F4F4F0; --dim:#8E9099; --line:#1F242E; --rim:rgba(255,255,255,.07);
+  --accent:#5B93F7; --accent-fill:#2563EB; --on-accent:#F4F4F0;
+  --ok:#4CC38A; --bad:#F0525E; --warn:#F2A65A;
+  --hl:#132342; --hlink:#9CC0FF;
+  --glow1:rgba(59,130,246,.13); --glow2:rgba(148,163,184,.07); --grain:.035;
+  --shadow:0 28px 56px -30px rgba(0,0,0,.85);
+  color-scheme:dark;
+}
+
+/* ---- canvas: light is huge and slow, grain always on ------------------ */
+*{box-sizing:border-box}
+/* No ligatures anywhere: C must read as typed (== stays ==, <= stays <=). !important
+   because every `font:` shorthand in the pages would reset it otherwise. */
+*,*::before,*::after{font-variant-ligatures:none!important}
+html{background:var(--bg)}
+body{margin:0;color:var(--ink);background-color:var(--bg);
+  background-image:radial-gradient(1500px 1000px at 8% -12%,var(--glow1),transparent 70%),
+                   radial-gradient(1700px 1100px at 104% 112%,var(--glow2),transparent 70%);
+  background-attachment:fixed;
+  font:14px/1.55 var(--sans);
+  font-feature-settings:"cv11","ss03";
+  -webkit-font-smoothing:antialiased}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:100;opacity:var(--grain);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+::selection{background:color-mix(in srgb,var(--accent) 35%,transparent)}
+
+/* ---- type: serif titles, grotesk body, tracked mono labels ------------ */
+code,kbd,pre,.mono,.src{font-family:var(--mono);font-variant-ligatures:none}
+a{color:inherit}
+h1{font:400 40px/1.05 var(--serif);letter-spacing:-.012em;margin:0}
+h1 em,h1 i{font-style:italic;color:var(--dim)}
+section>h2{display:flex;align-items:center;gap:14px;margin:0 0 12px;
+  font:500 11px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
+section>h2::after{content:"";flex:1;border-top:1px solid var(--line)}
+.dim{color:var(--dim)}
+
+/* ---- material: panels sit on the light ------------------------------- */
+.panel,.graphwrap{background:var(--glass);border:1px solid var(--line);border-radius:18px;
+  box-shadow:inset 0 1px 0 var(--rim),var(--shadow)}
+
+/* ---- controls --------------------------------------------------------- */
+button,input,select{font:inherit;color:inherit}
+button{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:5px 14px;
+  cursor:pointer;white-space:nowrap;transition:border-color .15s,background .15s}
+button:hover{border-color:color-mix(in srgb,var(--ink) 35%,var(--line))}
+button.primary,a.primary{background:var(--accent-fill);color:var(--on-accent);border-color:var(--accent-fill);font-weight:600}
+button.primary:hover,a.primary:hover{background:color-mix(in srgb,var(--accent-fill) 85%,var(--ink))}
+button:disabled{opacity:.45;cursor:default}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input,select{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:5px 9px}
+input::placeholder{color:color-mix(in srgb,var(--dim) 75%,transparent)}
+input[type=range]{accent-color:var(--accent)}
+
+/* ---- status pills: meaning first, set in tracked mono ------------------ */
+.pill{display:inline-block;padding:3px 11px;border-radius:999px;white-space:nowrap;
+  font:600 11px/1.5 var(--mono);letter-spacing:.12em;text-transform:uppercase}
+.pill.ok{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
+.pill.bad{background:color-mix(in srgb,var(--bad) 16%,transparent);color:var(--bad)}
+.pill.warn{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.pill.na{background:var(--chip);color:var(--dim)}
+.st.ok{color:var(--ok)}.st.bad{color:var(--bad)}.st.warn{color:var(--warn)}.st.na{color:var(--dim)}
+.chip{font:12px var(--mono);background:var(--chip);border-radius:6px;padding:1px 6px}
+
+/* ---- editorial rail: metadata along the left margin on wide screens ---- */
+.rail{display:none}
+@media (min-width:1560px){.rail{display:block;position:fixed;left:34px;bottom:48px;
+  transform:rotate(-90deg);transform-origin:left bottom;white-space:nowrap;
+  font:500 10.5px var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--dim);opacity:.7}}

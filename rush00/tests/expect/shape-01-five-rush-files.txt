@@ -1,0 +1,3 @@
+rush=3
+correct=yes
+algorithm=five separate files rush00.c..rush04.c in one ex00, each defines its own rush(), built one at a time with main.c and ft_putchar.c

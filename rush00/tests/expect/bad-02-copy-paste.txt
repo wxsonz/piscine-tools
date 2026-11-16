@@ -1,0 +1,3 @@
+rush=1
+correct=yes
+algorithm=Top, middle and bottom rows are three almost identical inline loops with no helper function, so the same if/else-if/else putchar logic is copy-pasted three times inside rush.

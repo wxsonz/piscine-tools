@@ -1,0 +1,4 @@
+rush=2
+correct=no
+algorithm=Top row ABA, middle rows B B, bottom row CBC, chosen by row index with the top row check.
+bug=rush(5, 1) and other y == 1 sizes print the bottom row CBC instead of the top row ABA: rush(5, 1), rush(1, 1), rush(2, 1) DIFFER

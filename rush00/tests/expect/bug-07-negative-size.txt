@@ -1,0 +1,4 @@
+rush=1
+correct=no
+algorithm=Top row /*\, middle rows * *, bottom row \*/, row loop guarded by x <= 0 || y <= 0.
+bug=only y is checked, so rush(0, 3) prints 3 empty lines and rush(-2, 4) prints 4 empty lines instead of nothing: rush(0, 3), rush(-2, 4) DIFFER
