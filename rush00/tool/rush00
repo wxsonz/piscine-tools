@@ -548,7 +548,7 @@ class Team:
         self.cfiles = [f for f in self.files if f.endswith(".c")]
         self.rush_files = sorted(f for f in self.cfiles if RUSH_FILE.match(f))
         self.helpers = [f for f in self.cfiles if f not in self.rush_files
-                        and f not in ("main.c", "ft_putchar.c")]
+                        and f not in ("main.c", "ft_putchar.c") and not self._has_main(f)]
         self._turn_in()
         self._parse()
         self._norm()
@@ -558,6 +558,11 @@ class Team:
             self.rush_results[int(RUSH_FILE.match(rf).group(1))] = self._rush(rf)
         self._summary_checks()
         return self
+
+    def _has_main(self, f):
+        # a second main (e.g. main_bonus.c taking argv) is an alternate program, not a helper
+        with open(os.path.join(self.ex, f), errors="replace") as fh:
+            return re.search(r"^\w[\w \t*]*\bmain\s*\(", fh.read(), re.M) is not None
 
     def _turn_in(self):
         rel = os.path.relpath(self.ex, self.path)
@@ -1457,7 +1462,7 @@ def write_index(subject):
 
 
 def main(argv):
-    opts = {"leader": None, "rush": None, "open": False, "norm": True, "port": 4242}
+    opts = {"leader": None, "rush": None, "open": False, "norm": True, "port": 6969}
     targets = []
     it = iter(argv)
     for a in it:
@@ -1468,7 +1473,7 @@ def main(argv):
         elif a == "--open":
             opts["open"] = True
         elif a == "--port":
-            opts["port"] = int(next(it, "4242"))
+            opts["port"] = int(next(it, "6969"))
         elif a == "--no-norm":
             opts["norm"] = False
         elif a in ("-h", "--help"):

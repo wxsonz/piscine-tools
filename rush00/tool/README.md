@@ -14,7 +14,7 @@ rush/
 ## The visualizer
 
 ```sh
-./rush00/tool/rush00 serve --open        # http://localhost:4242
+./rush00/tool/rush00 serve --open        # http://localhost:6969
 ```
 
 - **Dashboard**: drop team folders on the page, pick a folder, or paste a

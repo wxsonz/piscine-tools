@@ -221,7 +221,7 @@ def main(argv):
         print(f"{mark} {r['team']:38} rush0{e['rush']} {kind} "
               f"core {r.get('core', '-'):>5}  {v:28} steps {r.get('steps', '-')}")
         if r.get("lead"):
-            print(col("2", f"      idea: {r["lead"][:300]}" + (f"  · ⚑ {r['flags']} special path(s)" if r.get("flags") else "")))
+            print(col("2", f"      idea: {r['lead'][:300]}" + (f"  · ⚑ {r['flags']} special path(s)" if r.get("flags") else "")))
         for nt in r["notes"]:
             print(col("2", "      " + nt[:150]))
         for pb in r["problems"]:

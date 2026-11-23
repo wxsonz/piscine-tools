@@ -202,13 +202,21 @@ def main():
     gdb.execute("continue", to_string=True)
 
     truncated = False
+    mid_line = False
     while alive():
         if len(steps) >= MAX_STEPS or time.monotonic() > DEADLINE:
             truncated = True
             break
         f = gdb.selected_frame()
         sal = f.find_sal()
-        if sal.symtab and base(sal.symtab) in FILES:
+        if mid_line and sal.symtab and base(sal.symtab) in FILES:
+            # back from a library call partway through a line already recorded: finish it
+            mid_line = False
+            gdb.execute("step", to_string=True)
+            if pending and steps:
+                steps[-1].setdefault("w", []).extend(pending)
+                pending.clear()
+        elif sal.symtab and base(sal.symtab) in FILES:
             stack = user_stack()
             rec = {"f": base(sal.symtab), "l": sal.line, "stack": stack}
             cond = CONDS.get(f"{rec['f']}:{sal.line}")
@@ -229,6 +237,11 @@ def main():
             if pending and steps:
                 steps[-1].setdefault("w", []).extend(pending)
                 pending.clear()
+        elif user_stack(False):
+            # `step` went into a library that has debug info (libc6-dbg, as on the
+            # 42 iMacs) instead of over it: step back out to the user caller
+            gdb.execute("finish", to_string=True)
+            mid_line = True
         else:
             gdb.execute("continue", to_string=True)
             if pending:

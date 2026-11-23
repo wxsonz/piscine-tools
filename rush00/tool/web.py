@@ -281,7 +281,7 @@ class App:
         if not entry:
             raise ValueError(f"no rush(int x, int y)-shaped function in {rf}")
         helpers = [f for f in files if f.endswith(".c") and not R.RUSH_FILE.match(f)
-                   and f not in ("main.c", "ft_putchar.c")]
+                   and f not in ("main.c", "ft_putchar.c") and not t._has_main(f)]
         srcs = [f for f in ("ft_putchar.c",) if f in files] + [rf] + helpers
         res = rtrace.trace(ex, srcs, entry.name, [x, y])
         res["team"], res["rush"], res["rush_file"] = name, int(rf[4:6]), rf
@@ -406,7 +406,7 @@ def make_handler(app):
     return H
 
 
-def serve(R, port=4242, open_browser=False):
+def serve(R, port=6969, open_browser=False):
     os.makedirs(R.REPO_DIR, exist_ok=True)
     os.makedirs(R.REPORT_DIR, exist_ok=True)
     app = App(R, port)

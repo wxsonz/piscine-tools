@@ -1,0 +1,150 @@
+# rush00 subject — fill this from the REAL subject of the day.
+# Anything here overrides the tool's built-in core. Without a "== rushNN"
+# section a rush is checked for self-consistency against the team's own
+# output, and its pattern tile is shown for you to compare with the PDF.
+#
+#   rush00 subject today.pdf    fills this file from the PDF (review it!)
+
+dir      = ex00
+files    = main.c ft_putchar.c rush0X.c
+allowed  = write
+flags    = -Wall -Wextra -Werror
+function = rush
+assign = leader-mod-5      # assigned rush = (leader's first letter, a=1..z=26) % 5
+
+# extracted from rush00.pdf on 2026-11-16 18:00 — check every block below against the PDF
+
+== rush00
+pattern = 'o-o' '| |' 'o-o'   # derived from examples
+rush(5, 3)
+      o---o
+      |   |
+      o---o
+
+rush(5, 1)
+      o---o
+
+rush(1, 1)
+      o
+
+rush(1, 5)
+      o
+      |
+      |
+      |
+      o
+
+rush(4, 4)
+      o--o
+      |  |
+      |  |
+      o--o
+
+
+== rush01
+pattern = '/*\' '* *' '\*/'   # derived from examples
+rush(5, 3)
+      /***\
+      *   *
+      \***/
+
+rush(5, 1)
+      /***\
+
+rush(1, 1)
+      /
+
+rush(1, 5)
+      /
+      *
+      *
+      *
+      \
+
+rush(4, 4)
+      /**\
+      *  *
+      *  *
+      \**/
+
+
+== rush02
+pattern = 'ABA' 'B B' 'CBC'   # derived from examples
+rush(5, 3)
+      ABBBA
+      B   B
+      CBBBC
+
+rush(5, 1)
+      ABBBA
+
+rush(1, 1)
+      A
+
+rush(1, 5)
+      A
+      B
+      B
+      B
+      C
+
+rush(4, 4)
+      ABBA
+      B  B
+      B  B
+      CBBC
+
+
+== rush03
+pattern = 'ABC' 'B B' 'ABC'   # derived from examples
+rush(5, 3)
+      ABBBC
+      B   B
+      ABBBC
+
+rush(5, 1)
+      ABBBC
+
+rush(1, 1)
+      A
+
+rush(1, 5)
+      A
+      B
+      B
+      B
+      A
+
+rush(4, 4)
+      ABBC
+      B  B
+      B  B
+      ABBC
+
+
+== rush04
+pattern = 'ABC' 'B B' 'CBA'   # derived from examples
+rush(5, 3)
+      ABBBC
+      B   B
+      CBBBA
+
+rush(5, 1)
+      ABBBC
+
+rush(1, 1)
+      A
+
+rush(1, 5)
+      A
+      B
+      B
+      B
+      C
+
+rush(4, 4)
+      ABBC
+      B  B
+      B  B
+      CBBA
+

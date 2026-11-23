@@ -21,7 +21,11 @@ def run_capped(cmd, cwd, timeout_ms, env=None, cap_bytes=RUN_CAP_BYTES):
     "over_cap", "time_ms", "error"}. Never raises for the program's fault."""
     result = {"stdout": b"", "stderr": b"", "exit": None, "signal": None,
               "timed_out": False, "over_cap": False, "time_ms": 0, "error": ""}
-    # 1. start it in its own session, so the whole group can be killed
+    # 1. start it in its own session, so the whole group can be killed.
+    # No DEBUGINFOD_URLS (set on the 42 iMacs): ASan/valgrind symbolizing would
+    # fetch debug info over the network and stall past the timeout.
+    env = dict(os.environ if env is None else env)
+    env.pop("DEBUGINFOD_URLS", None)
     try:
         proc = subprocess.Popen(cmd, cwd=cwd, env=env, stdin=subprocess.DEVNULL,
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
