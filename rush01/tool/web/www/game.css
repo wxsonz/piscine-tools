@@ -1,0 +1,110 @@
+/* game.css: the game-screen layouts (critiques/GAME_LAYOUT_ANTIGRAVITY.md):
+   the dashboard's team select, the team page's gate track, hero stage,
+   loadout and deck tabs, and the library's VS race. Colours only through
+   the notebook.css variables; the data is the same facts, arranged. */
+
+/* ---- dashboard: three views, the cursor --------------------------------- */
+.views .btn+.btn{margin-left:-3px}
+.views .btn:not(:first-child):not(:last-child){border-radius:0}
+.trow.on{box-shadow:4px 4px 0 var(--orange);outline:2px solid var(--orange);outline-offset:1px}
+.card.team.on{outline:3px dashed var(--orange);outline-offset:6px}
+.trow{grid-template-columns:30px minmax(110px,170px) 126px 54px 118px minmax(0,1fr) 128px 40px}
+.trow .r-stamp{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:1180px){.trow{grid-template-columns:30px minmax(110px,1fr) 126px 54px 140px 40px}}
+@media (max-width:640px){.trow{grid-template-columns:24px minmax(0,1fr) auto 40px}}
+
+/* select: roster left, the picked team right (rush00's .stage idea) */
+.teams.select{display:grid;grid-template-columns:minmax(260px,360px) minmax(0,1fr);gap:34px;align-items:start;margin-top:18px}
+.sel-roster{position:sticky;top:76px}
+.sel-roster ol{max-height:calc(100vh - 230px)}
+.sel-roster li .rs{font:14px var(--marker);white-space:nowrap}
+.sel-roster li .rs.ok{color:var(--teal)}.sel-roster li .rs.bad{color:var(--orange-t)}
+.sel-preview{min-width:0}
+@media (max-width:900px){.teams.select{grid-template-columns:1fr}.sel-roster{position:static}.sel-roster ol{max-height:40vh}}
+
+/* ---- team page: the eval sheet as a track of gates ------------------------ */
+.gates{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:16px 0 0;padding:0;list-style:none;counter-reset:gate}
+.gates li{min-width:0;display:flex}
+.gate{position:relative;width:100%;display:flex;flex-direction:column;gap:2px;padding:7px 12px 8px;min-width:0;cursor:pointer;
+  background:var(--card);color:var(--ink);border:3px solid var(--ink);border-radius:10px 4px 10px 4px;box-shadow:3px 3px 0 var(--ink);
+  text-align:left;font:inherit}
+.gate:hover{transform:translate(-1px,-1px)}
+.gate .gn{font:12px var(--mono);color:var(--body);letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gate .gt{font:400 19px/1.1 var(--marker)}
+.gate .gs{font:15px/1.2 var(--hand);color:var(--body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gate.ok{border-color:var(--teal);box-shadow:3px 3px 0 var(--teal)}
+.gate.ok .gs{color:var(--teal)}
+.gate.stop{border-color:var(--orange);box-shadow:4px 4px 0 var(--orange);background:var(--card)}
+.gate.stop .gs,.gate.stop .gt{color:var(--orange-t)}
+.gate.check{border-style:dashed}
+.gate.na{border-style:dashed;border-color:var(--body);box-shadow:none;color:var(--body)}
+.gate.after{opacity:.62}
+.gates-note{margin:8px 0 0;font-size:16px;color:var(--text);opacity:.8}
+
+/* ---- team page: hero stage (3D) + loadout -------------------------------- */
+.hero{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(330px,1fr);gap:30px;align-items:start;margin-top:30px}
+@media (max-width:1080px){.hero{grid-template-columns:1fr}}
+.hero #sky{margin:0}
+.hero .sky-scene{height:470px}
+.loadout{margin:0}
+.loadout .hearts{gap:12px;margin:4px 0 6px}
+.slots{display:flex;flex-direction:column;gap:9px;margin-top:10px}
+.slot{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:6px 10px;
+  border:2px solid var(--ink);border-radius:10px 4px 10px 4px;background:var(--card);color:var(--ink)}
+.slot.c-clear{box-shadow:3px 3px 0 var(--ink)}
+.slot.c-mix{border-style:double;border-width:4px;padding:4px 8px}
+.slot.c-unrecognized{border-style:dashed;color:var(--body)}
+.slot .sl-part{font:14px var(--marker);letter-spacing:.04em;color:var(--body)}
+.slot .sl-name{font:400 18px/1.15 var(--marker);background:none;border:0;padding:0;color:inherit;text-align:left;cursor:pointer;min-width:0;overflow-wrap:anywhere}
+.slot .sl-name:hover{text-decoration:underline}
+.slot.c-unrecognized .sl-name{font:italic 18px var(--hand)}
+.slot .sl-meta{display:flex;gap:6px;align-items:center;justify-self:end}
+.slot .sl-meta .conf{font-size:12px;padding:0 6px}
+.slot .sl-meta .tier{font-size:12px;padding:0 6px}
+.slot .sl-acts{grid-column:2/-1;display:flex;flex-wrap:wrap;gap:6px}
+.slot .sl-acts .btn{font-size:13px;padding:1px 8px}
+.loadout .diag{font-size:17px}
+
+/* ---- team page: the deck (notebook divider tabs) --------------------------
+   The open tab is part of the panel under it: same fill, same frame, no
+   line between them; that panel sits flat, right under the tabs. */
+.deck-tabs{--frame:var(--border-hi,var(--ink));display:flex;flex-wrap:wrap;gap:4px;align-items:flex-end;
+  margin:40px 0 0;padding:6px 0 0 22px;position:relative;z-index:2}
+.deck-tabs .tab{position:relative;z-index:1;font:18px var(--marker);color:var(--body);background:var(--card-hi,var(--paper));
+  border:3px solid var(--frame);border-bottom:0;border-radius:12px 6px 0 0;padding:4px 16px 3px;cursor:pointer}
+.deck-tabs .tab:hover{color:var(--ink)}
+.deck-tabs .tab i{font:14px var(--hand);font-style:normal;color:var(--body);margin-left:4px}
+.deck-tabs .tab.on{z-index:3;color:var(--ink);background:var(--card);padding:7px 18px 6px;margin-bottom:-3px}
+.deck-tabs .sp{flex:1}
+.deck-tabs .keys{font-size:14px;color:var(--text);opacity:.7;padding:0 6px 6px 0}
+.deck>section{margin-top:30px}
+.deck>section.deck-first{margin-top:0;transform:none;border-top-left-radius:0}
+.deck>section.deck-first>.tape{display:none}
+.deck>.parts.deck-first{padding-top:26px}
+.part.flash,.gate.flash{animation:flash 1.2s ease-out}
+@keyframes flash{0%{box-shadow:0 0 0 6px var(--gold)}100%{box-shadow:0 0 0 0 transparent}}
+@media (prefers-reduced-motion:reduce){.part.flash,.gate.flash{animation:none}}
+
+/* ---- library: the VS race ------------------------------------------------ */
+.vs-head{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:16px;align-items:center;margin:10px 0 6px}
+.vs-side{display:flex;flex-direction:column;gap:4px;min-width:0}
+.vs-side.r{text-align:right;align-items:flex-end}
+.vs-p{font:14px var(--marker);color:var(--body)}
+.vs-name{font:400 20px/1.1 var(--marker);overflow-wrap:anywhere}
+.vs-emblem{font:400 44px/1 var(--marker);color:var(--orange);transform:rotate(-8deg);text-shadow:3px 3px 0 var(--ink)}
+.vs-track{display:flex;width:100%;height:18px;border:3px solid var(--ink);border-radius:9px 3px 9px 3px;overflow:hidden;background:var(--card)}
+.vs-side.r .vs-track{flex-direction:row-reverse}
+.vs-track i{display:block;background:repeating-linear-gradient(45deg,var(--teal) 0 8px,var(--teal2) 8px 16px);background-size:23px 23px;transition:width .12s linear;animation:vs-flow .8s linear infinite}
+.vs-count{font:14px var(--mono);color:var(--body)}
+.vs-done{display:inline-block;font:400 18px var(--marker);color:var(--teal);border:3px solid var(--teal);border-radius:8px 3px 8px 3px;padding:0 8px;transform:rotate(-3deg);animation:vs-slam .28s cubic-bezier(.22,1.3,.36,1) both}
+.vs-done.end{color:var(--body);border-color:var(--body);border-style:dashed}
+.vs-first{color:var(--orange-t);border-color:var(--orange)}
+.cmp-pane{position:relative}
+@keyframes vs-flow{from{background-position:0 0}to{background-position:23px 0}}
+@keyframes vs-slam{0%{opacity:0;transform:scale(1.6) rotate(-10deg)}100%{opacity:1;transform:scale(1) rotate(-3deg)}}
+@media (prefers-reduced-motion:reduce){.vs-track i,.vs-done{animation:none}}
+
+/* ---- team page HUD: the sheet's outcome, our bank apart ------------------- */
+.hud .n.bad{color:var(--orange-t)}
+.hud .n.na{color:var(--body)}
+.hud .n.x{color:var(--body);font-size:17px}

@@ -1,0 +1,362 @@
+{
+ "team": "d3",
+ "team_dir_abs": "/fixture/repo/d3",
+ "made_at": "2026-11-22T03:22:35",
+ "subject": {
+  "name": "rush01",
+  "turn_in_dir": "ex00",
+  "binary": "rush01",
+  "build": [
+   "cc",
+   "-Wall",
+   "-Wextra",
+   "-Werror",
+   "-o",
+   "rush01"
+  ],
+  "sizes": [
+   4
+  ],
+  "bonus_sizes": [
+   5,
+   6,
+   7,
+   8,
+   9
+  ],
+  "allowed": [
+   "write",
+   "malloc",
+   "free"
+  ],
+  "error_text": "Error\n",
+  "error_on_stderr": "note",
+  "norm_flags": [
+   "-R",
+   "CheckForbiddenSourceHeader"
+  ],
+  "sheet_binary": "rush-01"
+ },
+ "judge": {
+  "ex_dir": "ex00",
+  "built": false,
+  "build_log": "main.c: In function \u2018read_clues\u2019:\nmain.c:21:25: error: expected \u2018;\u2019 before \u2018}\u2019 token\n   21 |         return (k == 16)\n      |                         ^\n      |                         ;",
+  "files": {
+   "sources": [
+    "ex00/main.c"
+   ],
+   "headers": [
+    "ex00/rush.h"
+   ],
+   "flagged": [],
+   "no_ex_dir": false
+  },
+  "forbidden": {
+   "names": [
+    {
+     "name": "atoi",
+     "where": "source",
+     "file": "ex00/main.c",
+     "line": 12
+    },
+    {
+     "name": "printf",
+     "where": "source",
+     "file": "ex00/main.c",
+     "line": 66
+    },
+    {
+     "name": "printf",
+     "where": "source",
+     "file": "ex00/main.c",
+     "line": 79
+    }
+   ],
+   "notes": []
+  },
+  "norm": {
+   "ran": true,
+   "ok": false,
+   "errors": [
+    {
+     "file": "ex00/main.c",
+     "line": 1,
+     "text": "INVALID_HEADER"
+    },
+    {
+     "file": "ex00/main.c",
+     "line": 21,
+     "text": "RETURN_PARENTHESIS"
+    },
+    {
+     "file": "ex00/main.c",
+     "line": 22,
+     "text": "TOO_FEW_TAB"
+    },
+    {
+     "file": "ex00/main.c",
+     "line": 24,
+     "text": "TAB_INSTEAD_SPC"
+    },
+    {
+     "file": "ex00/main.c",
+     "line": 24,
+     "text": "SPC_AFTER_OPERATOR"
+    },
+    {
+     "file": "ex00/main.c",
+     "line": 27,
+     "text": "EMPTY_LINE_FUNCTION"
+    },
+    {
+     "file": "ex00/main.c",
+     "line": 38,
+     "text": "TOO_MANY_LINES"
+    },
+    {
+     "file": "ex00/rush.h",
+     "line": 1,
+     "text": "INVALID_HEADER"
+    }
+   ],
+   "note": ""
+  },
+  "sanitizer": {
+   "ran": false,
+   "findings": [],
+   "note": "skipped: the turn-in does not build"
+  },
+  "runs": [],
+  "groups": {},
+  "timing": null,
+  "diagnosis": null,
+  "tools": {
+   "cc": true,
+   "norminette": true,
+   "valgrind": true,
+   "asan": true
+  },
+  "stops": [
+   {
+    "key": "norm",
+    "level": "stop",
+    "text": "8 norm error(s)",
+    "sheet": "Norm error: evaluation stops."
+   },
+   {
+    "key": "build",
+    "level": "stop",
+    "text": "does not build: main.c: In function \u2018read_clues\u2019:",
+    "sheet": "Nothing to test: no binary."
+   },
+   {
+    "key": "forbidden",
+    "level": "check",
+    "text": "calls atoi, printf",
+    "sheet": "Subject: allowed functions are write, malloc, free."
+   }
+  ],
+  "bonus": {
+   "sizes": {},
+   "largest_n": null,
+   "counted": false,
+   "note": "no bonus runs"
+  },
+  "malloc_fail": {
+   "ran": false,
+   "mallocs": null,
+   "tries": [],
+   "crashes": [],
+   "note": "build failed: skipped"
+  }
+ },
+ "detect": {
+  "parts": {
+   "parse": {
+    "id": "parse.atoi",
+    "name": "atoi per token",
+    "tier": null,
+    "confidence": "likely",
+    "also": [],
+    "where": [
+     {
+      "file": "ex00/main.c",
+      "func": "read_clues",
+      "line": 3
+     }
+    ],
+    "evidence": [
+     {
+      "file": "ex00/main.c",
+      "line": 12,
+      "text": "b->clue[k] = atoi(str + i);",
+      "why": "each token goes through atoi"
+     },
+     {
+      "file": "ex00/main.c",
+      "line": 13,
+      "text": "if (b->clue[k] < 1 || b->clue[k] > 4)",
+      "why": "range check after the conversion"
+     }
+    ],
+    "facts": [
+     {
+      "key": "accepts",
+      "text": "accepts 04 and +1 (atoi)"
+     }
+    ],
+    "explain": "Converts each token with atoi, then checks the range.",
+    "questions": [
+     "What does atoi give for \"04\"?"
+    ]
+   },
+   "data": {
+    "id": "data.struct",
+    "name": "Struct board",
+    "tier": null,
+    "confidence": "clear",
+    "also": [],
+    "where": [
+     {
+      "file": "ex00/rush.h",
+      "func": null,
+      "line": 7
+     }
+    ],
+    "evidence": [
+     {
+      "file": "ex00/rush.h",
+      "line": 7,
+      "text": "typedef struct s_board",
+      "why": "a struct type in the header"
+     },
+     {
+      "file": "ex00/rush.h",
+      "line": 10,
+      "text": "int cell[4][4];",
+      "why": "the grid lives in the struct"
+     },
+     {
+      "file": "ex00/rush.h",
+      "line": 11,
+      "text": "int clue[16];",
+      "why": "the clues live in the struct"
+     }
+    ],
+    "facts": [
+     {
+      "key": "clues",
+      "text": "clues flat [16] in the struct"
+     }
+    ],
+    "explain": "One struct holds n, the grid and the clues.",
+    "questions": [
+     "Why a struct instead of separate arrays?"
+    ]
+   },
+   "solve": {
+    "id": "solve.prefill",
+    "name": "Pre-fill rules, then search",
+    "tier": 2,
+    "confidence": "mix",
+    "also": [
+     "solve.bt_end"
+    ],
+    "where": [
+     {
+      "file": "ex00/main.c",
+      "func": "prefill",
+      "line": 24
+     },
+     {
+      "file": "ex00/main.c",
+      "func": "search",
+      "line": 40
+     }
+    ],
+    "evidence": [
+     {
+      "file": "ex00/main.c",
+      "line": 31,
+      "text": "if (b->clue[i] == 4)",
+      "why": "clue 4 fixes the edge before the search"
+     },
+     {
+      "file": "ex00/main.c",
+      "line": 46,
+      "text": "if (b->cell[pos / 4][pos % 4])",
+      "why": "the search skips pre-filled cells"
+     },
+     {
+      "file": "ex00/main.c",
+      "line": 51,
+      "text": "b->cell[pos / 4][pos % 4] = v;",
+      "why": "places without any check: checks only at the end"
+     }
+    ],
+    "facts": [
+     {
+      "key": "clue_check",
+      "text": "no clue check found"
+     }
+    ],
+    "explain": "Fixes some cells from the clues first, then searches the rest.",
+    "questions": [
+     "Which cells does a clue of 4 fix?",
+     "Where do you check the clues during the search?"
+    ]
+   },
+   "print": {
+    "id": null,
+    "name": "unrecognized",
+    "tier": null,
+    "confidence": "unrecognized",
+    "also": [],
+    "where": [
+     {
+      "file": "ex00/main.c",
+      "func": "show",
+      "line": 59
+     }
+    ],
+    "evidence": [],
+    "facts": [
+     {
+      "key": "printf",
+      "text": "prints with printf (forbidden)"
+     }
+    ],
+    "explain": "",
+    "questions": []
+   }
+  },
+  "project": {
+   "globals": [],
+   "structs": [
+    {
+     "file": "ex00/rush.h",
+     "line": 7,
+     "name": "t_board"
+    }
+   ],
+   "functions": 5,
+   "longest": {
+    "name": "search",
+    "file": "ex00/main.c",
+    "lines": 17
+   },
+   "never_freed": false,
+   "bonus": false,
+   "authors": {
+    "alice": 70,
+    "bob": 30
+   },
+   "commits": 4,
+   "ask": []
+  },
+  "error": null
+ },
+ "cross_check": [
+  "no runs: timing cross-check skipped"
+ ]
+}

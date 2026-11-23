@@ -1,0 +1,11 @@
+# int x[100] in a struct, t_game g = {0}: gcc emits memset (nm -u verified), must NOT be flagged
+# norm = errors: DECL_ASSIGN_LINE on the = {0} line
+built = yes
+ex_dir = yes
+forbidden = none
+group.ok4 = pass
+group.fmt = pass
+group.nosol4-easy = pass
+diagnosis = none
+sanitizer = clean
+norm = errors

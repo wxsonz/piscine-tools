@@ -1,0 +1,12 @@
+# c10: hardcoded: only the PDF example gives a grid
+parse = parse.fixed
+data = data.grid2d
+solve = solve.hardcode
+print = print.char
+built = yes
+ex_dir = yes
+forbidden = none
+group.ok4 = fail
+group.fmt = pass
+group.nosol4-easy = pass
+sanitizer = clean

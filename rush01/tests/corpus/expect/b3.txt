@@ -1,0 +1,10 @@
+# visibility count starts at 1: Error on valid puzzles
+built = yes
+ex_dir = yes
+forbidden = none
+group.ok4 = fail
+group.fmt = pass
+group.nosol4-easy = pass
+diagnosis = none                 # prints Error on every valid puzzle: indistinguishable from always-Error (puzzle B10)
+sanitizer = clean
+norm = ok

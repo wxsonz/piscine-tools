@@ -1,0 +1,10 @@
+# clues read transposed (top/bottom taken as left/right)
+built = yes
+ex_dir = yes
+forbidden = none
+group.ok4 = fail
+group.fmt = pass
+group.nosol4-easy = pass
+diagnosis = transpose
+sanitizer = clean
+norm = ok

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rush01 · teams</title>
+<link rel="stylesheet" href="/www/notebook.css">
+<link rel="stylesheet" href="/www/rush01.css">
+<link rel="stylesheet" href="/www/select.css">
+<link rel="stylesheet" href="/www/game.css">
+</head>
+<body>
+<!-- shared drawing bits (from rush00's dash.html): the wobble that makes lines look hand-drawn -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="wob" x="-5%" y="-10%" width="110%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="5"/><feDisplacementMap in="SourceGraphic" scale="3"/></filter>
+  <filter id="dz" x="-4%" y="-4%" width="108%" height="108%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="11"/><feDisplacementMap in="SourceGraphic" scale="5"/></filter>
+  <pattern id="hg" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><path d="M0 4.5 L9 4.5" stroke="#F2C38F" stroke-width="4.5"/></pattern>
+</defs></svg>
+
+<div class="wrap">
+<header class="band">
+  <div>
+    <p class="kicker">LEVEL 1 · TEAM SELECT</p>
+    <h1>Rush01</h1>
+    <p class="sub" id="subj">the skyscraper puzzle · what each team's code really does</p>
+  </div>
+  <!-- a little skyline: decoration only -->
+  <svg class="doodle" width="200" height="140" viewBox="0 0 200 140" aria-hidden="true">
+    <g filter="url(#dz)" fill="none" stroke="#1E2A3A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 130 L190 130"/>
+      <path d="M22 130 L22 84 L52 84 L52 130"/>
+      <path d="M62 130 L62 36 L96 36 L96 130" fill="url(#hg)"/>
+      <path d="M106 130 L106 60 L138 60 L138 130"/>
+      <path d="M148 130 L148 100 L178 100 L178 130"/>
+      <path d="M79 22 L79 36"/>
+    </g>
+  </svg>
+  <span class="sp"></span>
+  <div class="hud" id="hud" title="teams the eval sheet lets through: nothing stops, eliminatory all pass"></div>
+  <div class="tools"><a class="btn small" href="/library">library</a><button class="btn small" id="rerunall" type="button">re-run all</button><button class="btn small themebtn" type="button" title="paper / night page">&#9790;</button></div>
+</header>
+
+<main>
+  <div class="pickbar" id="pickbar">
+    <input id="find" type="search" placeholder="find a team   ( / )" autocomplete="off" spellcheck="false">
+    <div class="filters" id="filters" role="group" aria-label="show"></div>
+    <span class="sp"></span>
+    <button class="btn small" id="addbtn" type="button" aria-expanded="false">+ add team</button>
+    <div class="views" role="group" aria-label="view">
+      <button class="btn small" type="button" data-view="list">list</button><button class="btn small" type="button" data-view="select">select</button><button class="btn small" type="button" data-view="cards">cards</button>
+    </div>
+    <div class="trow thead" id="thead" aria-hidden="true"><span class="r-no">#</span><span>team</span><span title="what the eval sheet makes of it">sheet</span><span title="the eval sheet's eliminatory tests">elim.</span><span title="our own bank, not the eval sheet">extra checks</span><span class="r-parts"><span>parse</span><span>data</span><span>solve</span><span>print</span></span><span class="r-flags">stops · bonus</span><span></span></div>
+  </div>
+  <div class="join" id="drop" hidden>
+    <h3>+ New team</h3>
+    <p>Drop team folders anywhere on this page, <label class="pick">pick a folder<input id="pick" type="file" webkitdirectory multiple hidden></label>, copy them into <code id="repo"></code>, or clone:</p>
+    <form id="gitform"><input name="url" placeholder="git@vogsphere…  /  https://…git" autocomplete="off">
+      <button class="btn small" type="submit">clone</button></form>
+  </div>
+  <div class="teams" id="teams"><div class="empty">Loading the teams…</div></div>
+  <p class="nomatch" id="nomatch" hidden>No team matches. <button class="btn small" id="clearfind" type="button">show all</button></p>
+</main>
+</div>
+<script src="/www/page.js"></script>
+<script src="/www/dash.js"></script>
+</body></html>

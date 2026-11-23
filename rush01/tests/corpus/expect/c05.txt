@@ -1,0 +1,13 @@
+# c05: solve not claimed: row check on placement, rest at the end
+parse = parse.scan
+data = data.flat
+print = print.char
+built = yes
+ex_dir = yes
+forbidden = none
+group.ok4 = pass
+group.fmt = pass
+group.nosol4-easy = pass
+sanitizer = clean
+diagnosis = none
+solve = solve.bt_unique            # row checked on placement, columns + clues at the end (lead, 2026-11-22)

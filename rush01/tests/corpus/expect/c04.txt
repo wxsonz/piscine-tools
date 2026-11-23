@@ -1,0 +1,12 @@
+parse = parse.atoi
+data = data.struct
+solve = solve.prefill + solve.bt_unique
+print = print.putstr
+built = yes
+ex_dir = yes
+forbidden = none
+group.ok4 = pass
+group.fmt = pass
+group.nosol4-easy = pass
+sanitizer = clean
+diagnosis = none

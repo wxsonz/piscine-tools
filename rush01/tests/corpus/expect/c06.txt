@@ -1,0 +1,12 @@
+parse = parse.fixed
+data = data.padded
+solve = solve.bt_iter
+print = print.line
+built = yes
+ex_dir = yes
+forbidden = none
+group.ok4 = pass
+group.fmt = pass
+group.nosol4-easy = pass
+sanitizer = clean
+diagnosis = none

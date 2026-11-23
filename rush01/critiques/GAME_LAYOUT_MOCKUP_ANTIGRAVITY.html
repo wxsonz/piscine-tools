@@ -1,0 +1,749 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rush01 · Game Layout Mockup (Antigravity / Gemini)</title>
+<style>
+@font-face{font-family:"Permanent Marker";font-display:swap;src:url(../../rush00/tool/www/fonts/PermanentMarker-Regular.ttf) format("truetype")}
+@font-face{font-family:"Patrick Hand";font-display:swap;src:url(../../rush00/tool/www/fonts/PatrickHand-Regular.ttf) format("truetype")}
+@font-face{font-family:"JetBrains Mono";font-weight:100 800;font-display:swap;src:url(../../rush00/tool/www/fonts/JetBrainsMono-Variable.ttf) format("truetype")}
+
+:root{
+  --ink:#1E2A3A; --body:#3F4A5A; --teal:#0B7A73; --teal2:#14958C; --orange:#E07A1F;
+  --orange-t:#B4560A; --blue:#3B5BA9; --gold:#F2C38F; --gold-hi:#F2C38F; --mint:#CFE7E4;
+  --card:#FFFDF7; --card-hi:#FFFDF7; --paper:#FBF8EF; --well:#F4F0E4; --rule:#E6E0CF;
+  --border:#1E2A3A; --border-hi:#1E2A3A; --muted-border:#3F4A5A88; --shadow:#1E2A3A;
+  --page:#FBF8EF; --page-rule:#E6E0CF; --text:#1E2A3A;
+  --sky-ground:#F4F0E4; --sky-grid:#1E2A3A33; --sky-top:#FFFDF7;
+  --sky-ns:#E6E0CF; --sky-ew:#D3C9AE; --sky-floor:#1E2A3A44; --sky-edge:#1E2A3A;
+  --marker:"Permanent Marker","Trebuchet MS",sans-serif;
+  --hand:"Patrick Hand","Trebuchet MS",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --ink:#ECE6D8; --body:#A8B7C9; --teal:#38C9BC; --teal2:#24A498; --orange:#F5943B;
+  --orange-t:#FFAD5C; --blue:#7AA8FF; --gold:#594222; --gold-hi:#F0BE70; --mint:#1C3F40;
+  --card:#1C2736; --card-hi:#233144; --paper:#151F2C; --well:#0E1520; --rule:#2D3D52;
+  --border:#4B6078; --border-hi:#647C98; --muted-border:#7E93AB80; --shadow:#080C12;
+  --page:#121A24; --page-rule:#1C2737; --text:#ECE6D8;
+  --sky-ground:#131C28; --sky-grid:#9FB4CC33; --sky-top:#2D3E55;
+  --sky-ns:#202E41; --sky-ew:#16202F; --sky-floor:#B2C6DC38; --sky-edge:#7E95B0;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+*,*::before,*::after{font-variant-ligatures:none!important}
+[hidden]{display:none!important}
+html{background:var(--page)}
+body{margin:0;color:var(--text);font:19px/1.3 var(--hand);
+  background:repeating-linear-gradient(0deg,var(--page) 0px,var(--page) 31px,var(--page-rule) 31px,var(--page-rule) 32px)}
+button,input,select{font:inherit;color:inherit}
+code{font-family:var(--mono);font-size:13.5px;background:var(--well);padding:1px 6px;border-radius:4px}
+.wrap{max-width:1380px;margin:0 auto;padding:0 32px 64px}
+@media (max-width:720px){.wrap{padding:0 14px 48px}}
+
+/* ---- top mockup switcher bar ---- */
+.mockbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 0 14px;border-bottom:3px dashed var(--rule)}
+.mockbar .sig{font:15px var(--mono);color:var(--body);margin-right:auto}
+.mockbar .sig b{color:var(--teal)}
+
+/* ---- shared notebook-game atoms ---- */
+.btn{display:inline-flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap;text-decoration:none;
+  font:16px var(--marker);color:var(--ink);background:var(--card-hi);border:3px solid var(--border-hi);
+  border-radius:11px 4px 11px 5px;padding:4px 13px;box-shadow:3px 3px 0 var(--shadow);transition:transform .08s,box-shadow .08s}
+.btn:hover{transform:translate(-1px,-1px);border-color:var(--ink);box-shadow:4px 4px 0 var(--shadow)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--shadow)}
+.btn.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn.go{background:var(--teal);color:var(--paper);border-color:var(--teal2);font-size:21px;padding:7px 22px;box-shadow:5px 5px 0 var(--shadow)}
+.btn.small{font-size:14px;padding:3px 10px}
+.card{position:relative;background:var(--card);color:var(--ink);border:3px solid var(--border-hi);
+  border-radius:16px 6px 15px 7px;box-shadow:6px 6px 0 var(--shadow);padding:20px 24px}
+.tape{position:absolute;height:26px;top:-14px;left:40%;width:104px;transform:rotate(-2.5deg);pointer-events:none;
+  background:#F2C38FB8;border-left:2px dashed #1E2A3A40;border-right:2px dashed #1E2A3A40}
+:root[data-theme="dark"] .tape{background:#D9A75A44;border-left-color:#ECE6D838;border-right-color:#ECE6D838}
+.lab{font:14px var(--marker);color:var(--body);letter-spacing:.05em;margin:0 0 6px;text-transform:uppercase}
+.kicker{font:19px var(--marker);color:var(--teal);margin:0}
+h1{font:400 50px/1 var(--marker);margin:2px 0 4px}
+h2{font:400 28px/1.1 var(--marker);margin:0}
+h3{font:400 23px/1.1 var(--marker);margin:0}
+.sub{color:var(--body);margin:0;font-size:17px}
+.st{display:inline-block;font:13px/1.3 var(--marker);padding:1px 8px;border:2px solid currentColor;border-radius:8px 3px 8px 3px;white-space:nowrap}
+.st.ok{color:var(--teal)}.st.bad{color:var(--orange-t)}.st.na{color:var(--body)}
+.tier{display:inline-block;font:13px/1.2 var(--marker);padding:1px 7px;border:2px solid var(--border-hi);border-radius:4px 8px 4px 8px;background:var(--gold);color:var(--ink)}
+.stamp{display:inline-block;font:400 26px/1 var(--marker);padding:8px 14px;border:4px solid currentColor;border-radius:10px 4px 12px 5px;
+  transform:rotate(-6deg);text-transform:uppercase;background:var(--paper)}
+.stamp.ok{color:var(--teal)}.stamp.bad{color:var(--orange-t)}
+.stamp small{display:block;font:14px var(--hand);text-transform:none;margin-top:3px;text-align:center}
+
+.band{display:flex;flex-wrap:wrap;align-items:flex-end;gap:18px;padding:22px 0 14px}
+.band .sp{flex:1}
+.hud{display:flex;align-items:center;gap:14px;padding:7px 16px;background:var(--card);border:3px solid var(--border-hi);
+  border-radius:14px 4px 16px 6px;box-shadow:5px 5px 0 var(--teal);transform:rotate(1deg);white-space:nowrap}
+.hud .lv{font:20px var(--marker)}.hud .n{font:18px var(--marker);color:var(--teal)}
+.hud .bar{width:120px;height:18px;border:2px solid var(--border-hi);border-radius:8px 3px 8px 3px;overflow:hidden;background:var(--paper);display:flex}
+.hud .bar i{display:block;background:repeating-linear-gradient(45deg,var(--teal) 0 7px,var(--teal2) 7px 14px)}
+
+/* ==========================================================================
+   SCREEN 1: TEAM COCKPIT (Checkpoint Track + Hero 3D + Loadout + Notebook Tabs)
+   ========================================================================== */
+.gates{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:10px 0 18px}
+@media (max-width:960px){.gates{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.gate{position:relative;display:flex;flex-direction:column;gap:2px;padding:8px 10px;text-align:left;cursor:pointer;
+  background:var(--card);border:3px solid var(--border-hi);border-radius:12px 4px 12px 4px;box-shadow:3px 3px 0 var(--shadow)}
+.gate:hover{border-color:var(--ink);transform:translateY(-1px)}
+.gate .gstep{font:12px var(--mono);color:var(--body)}
+.gate .gname{font:16px var(--marker);color:var(--ink)}
+.gate .gstat{font:14px var(--marker)}
+.gate.ok{border-color:var(--teal);box-shadow:3px 3px 0 var(--teal)}
+.gate.ok .gstat{color:var(--teal)}
+.gate.stop{border-color:var(--orange);box-shadow:3px 3px 0 var(--orange);background:color-mix(in srgb,var(--orange) 11%,var(--card))}
+.gate.stop .gstat{color:var(--orange-t)}
+.gate.na{border-style:dashed;border-color:var(--muted-border);opacity:.72;box-shadow:none}
+.gate.na .gstat{color:var(--body)}
+.gate::after{content:"▶";position:absolute;right:-11px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--body);z-index:2}
+.gate:last-child::after{display:none}
+@media (max-width:960px){.gate::after{display:none}}
+
+.cockpit{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(340px,.95fr);gap:24px;align-items:start}
+@media (max-width:1020px){.cockpit{grid-template-columns:1fr}}
+
+/* 3D Hero Stage */
+.sky-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+.sky-bar .sp{flex:1}
+.sky-pick{background:var(--paper);border:0;border-bottom:3px solid var(--border-hi);font-size:17px;padding:1px 4px}
+.sky-scene{height:380px;display:flex;align-items:center;justify-content:center;perspective:1500px;perspective-origin:50% 34%;
+  touch-action:none;cursor:grab;user-select:none;overflow:hidden;border:2px dashed var(--border);border-radius:14px 5px 14px 6px;
+  background:radial-gradient(circle at 50% 46%,var(--card-hi) 0%,var(--well) 100%)}
+.sky-scene:active{cursor:grabbing}
+.sky-board{position:relative;transform-style:preserve-3d}
+.sky-ground{position:absolute;background-color:var(--sky-ground);border:3px solid var(--sky-edge);
+  background-image:linear-gradient(to right,var(--sky-grid) 1px,transparent 1px),linear-gradient(to bottom,var(--sky-grid) 1px,transparent 1px)}
+.sky-box{position:absolute;transform-style:preserve-3d;pointer-events:none}
+.sky-box .f{position:absolute;box-sizing:border-box;border:2px solid var(--sky-edge)}
+.sky-box .f.top{left:0;top:0;display:flex;align-items:center;justify-content:center;background:var(--sky-top);font:700 1em var(--mono);color:var(--ink)}
+.sky-box .f.ns{background-color:var(--sky-ns);background-image:repeating-linear-gradient(to bottom,transparent 0 calc(var(--floor) - 2px),var(--sky-floor) calc(var(--floor) - 2px) var(--floor))}
+.sky-box .f.ew{background-color:var(--sky-ew);background-image:repeating-linear-gradient(to right,transparent 0 calc(var(--floor) - 2px),var(--sky-floor) calc(var(--floor) - 2px) var(--floor))}
+.sky-box.seen .f.top{background:var(--teal);color:var(--paper)}
+.sky-box.seen .f.ns{background-color:var(--teal2)}
+.sky-box.seen .f.ew{background-color:#197D74}
+.sky-box.bad .f.top{background:var(--orange);color:var(--paper)}
+.sky-box.bad .f.ns{background-color:#D27321}
+.sky-box.bad .f.ew{background-color:#AD5A15}
+.sky-box.hidden .f{opacity:.28;border-style:dashed}
+.sky-box.off .f{opacity:.48}
+.sky-clue{position:absolute;display:flex;align-items:center;justify-content:center;padding:0;border:0;background:none;cursor:pointer;color:var(--ink)}
+.sky-clue .chip{display:flex;align-items:center;justify-content:center;width:68%;height:68%;font:400 1em var(--marker);
+  background:var(--card-hi);border:3px solid var(--border-hi);border-radius:50% 44% 52% 40%}
+.sky-clue.ok .chip{border-color:var(--teal);color:var(--teal)}
+.sky-clue.bad .chip{border-color:var(--orange);color:var(--orange-t);border-width:4px}
+.sky-clue.on .chip{box-shadow:0 0 0 4px var(--gold-hi)}
+.sky-clue .cnt{position:absolute;top:-14%;right:-18%;min-width:1.45em;padding:0 .25em;font:400 .78em/1.35 var(--marker);
+  color:var(--paper);background:var(--teal);border:2px solid var(--paper);border-radius:8px 3px 8px 3px}
+.sky-clue.bad .cnt{background:var(--orange)}
+.sky-clue .cnt:empty{display:none}
+.sky-flat{display:grid;gap:5px;margin:14px auto;font-size:20px;max-width:290px}
+.sky-flat .sky-clue{position:relative;aspect-ratio:1;width:100%}
+.sky-cell{display:flex;align-items:center;justify-content:center;aspect-ratio:1;width:100%;border:2px solid var(--border-hi);
+  border-radius:6px 3px 6px 3px;font:700 1em var(--mono);background:linear-gradient(to top,var(--gold) calc(var(--shade,0) * 100%),var(--paper) 0)}
+.sky-cell.seen{background:var(--teal);border-color:var(--teal);color:var(--paper)}
+.sky-cell.hidden{opacity:.3;border-style:dashed}
+.sky-cell.off{opacity:.48}
+.diag-strip{margin:10px 0 0;padding:8px 12px;border-left:4px solid var(--orange);background:var(--paper);color:var(--orange-t);font-size:18px;border-radius:0 8px 8px 0}
+.sky-line{min-height:1.4em;margin:8px 0 0;font-size:17px;color:var(--body)}
+
+/* Right Sidecar: Lives + 4-Slot Character Loadout */
+.hearts{display:flex;gap:18px;flex-wrap:wrap;margin:6px 0 14px}
+.heart{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:15px;color:var(--body)}
+.heart.bad{color:var(--orange-t)}
+.loadout{display:flex;flex-direction:column;gap:9px}
+.slot{border:2px solid var(--border-hi);border-radius:11px 4px 11px 4px;background:var(--paper);padding:9px 12px;cursor:pointer;
+  transition:border-color .1s,box-shadow .1s}
+.slot:hover,.slot.open{border-color:var(--teal);box-shadow:3px 3px 0 var(--teal)}
+.slot-top{display:flex;align-items:center;gap:10px}
+.slot-k{font:13px var(--marker);color:var(--body);min-width:52px;letter-spacing:.04em}
+.slot-name{font:18px/1.15 var(--marker);color:var(--ink);flex:1;min-width:0}
+.slot-ev{margin-top:8px;padding-top:8px;border-top:1px dashed var(--rule);font-size:16px;color:var(--body)}
+.slot-ev code{display:inline-block;margin:2px 0;color:var(--ink)}
+
+/* Physical Notebook Divider Tabs */
+.deck{margin-top:26px}
+.nb-tabs{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-end;padding-left:14px}
+.nb-tab{cursor:pointer;font:17px var(--marker);padding:7px 18px 6px;color:var(--body);background:var(--paper);
+  border:3px solid var(--border);border-bottom:0;border-radius:12px 12px 0 0;position:relative;top:3px}
+.nb-tab:hover{color:var(--ink)}
+.nb-tab.on{color:var(--ink);background:var(--card);border-color:var(--border-hi);padding-top:10px;z-index:2;
+  box-shadow:inset 0 4px 0 var(--teal)}
+.nb-tab.warn.on{box-shadow:inset 0 4px 0 var(--orange)}
+.nb-body{border-top-left-radius:6px}
+.ask-row{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;padding:8px 0;border-top:1px dashed var(--rule)}
+.ask-row:first-child{border-top:0}
+table.runs{width:100%;border-collapse:collapse;font-size:16px;margin-top:8px}
+table.runs th{font:13px var(--marker);text-align:left;color:var(--body);border-bottom:2px solid var(--border-hi);padding:4px 8px}
+table.runs td{padding:6px 8px;border-top:1px dashed var(--rule)}
+.fake-code{font:13.5px/1.55 var(--mono);background:var(--well);border:2px solid var(--border-hi);border-radius:10px;padding:10px 14px;overflow:auto;color:var(--ink)}
+.fake-code .hl{display:block;background:#F5943B33;margin:0 -14px;padding:0 14px;border-left:4px solid var(--orange)}
+.fake-code .kw{color:var(--blue)}.fake-code .cm{color:var(--body);font-style:italic}
+
+/* ==========================================================================
+   SCREEN 2: DASHBOARD — ARCADE FIGHTER SELECT
+   ========================================================================== */
+.fselect{display:grid;grid-template-columns:minmax(290px,.88fr) minmax(0,1.25fr);gap:26px;align-items:start;margin-top:12px}
+@media (max-width:960px){.fselect{grid-template-columns:1fr}}
+.roster-box{padding:14px 0 12px}
+.roster-top{display:flex;gap:8px;align-items:center;padding:0 18px 10px}
+.roster-top input{flex:1;background:transparent;border:0;border-bottom:3px solid var(--border-hi);font-size:18px;padding:2px 4px}
+.roster-list{list-style:none;margin:0;padding:0;background:repeating-linear-gradient(0deg,transparent 0 41px,var(--rule) 41px 42px)}
+.roster-item{display:grid;grid-template-columns:22px 1fr auto auto;gap:10px;align-items:center;height:42px;padding:0 18px 0 26px;cursor:pointer;position:relative}
+.roster-item:hover{background:color-mix(in srgb,var(--teal) 14%,transparent)}
+.roster-item.on{background:var(--mint)}
+.roster-item.on::before{content:"▶";position:absolute;left:8px;color:var(--orange);font-size:15px}
+.roster-item .rnm{font:18px var(--marker);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.roster-item .rmeta{font:14px var(--mono);color:var(--body)}
+.hero-head{display:flex;gap:16px;align-items:flex-start;justify-content:space-between}
+.mini-gates{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0}
+.mg{font:13px var(--marker);padding:2px 9px;border:2px solid var(--border);border-radius:8px 3px 8px 3px;background:var(--paper)}
+.mg.ok{border-color:var(--teal);color:var(--teal)}.mg.stop{border-color:var(--orange);color:var(--orange-t)}.mg.na{border-style:dashed;color:var(--body)}
+.stg-bar{display:grid;grid-template-columns:110px 1fr 48px;gap:10px;align-items:center;margin:6px 0}
+.stg-bar .track{height:15px;border:2px solid var(--border-hi);border-radius:7px 2px 7px 2px;overflow:hidden;background:var(--paper);display:flex}
+.stg-bar .track i{display:block;background:repeating-linear-gradient(45deg,var(--teal) 0 7px,var(--teal2) 7px 14px)}
+.stg-bar.bad .track i{background:repeating-linear-gradient(-35deg,var(--orange) 0 7px,#D67622 7px 14px)}
+
+/* ==========================================================================
+   SCREEN 3: VS ARENA SOLVER RACE
+   ========================================================================== */
+.vs-head{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;margin:10px 0 16px}
+.vs-badge{font:400 34px/1 var(--marker);color:var(--paper);background:var(--orange);border:3px solid var(--ink);
+  border-radius:50% 42% 52% 40%;padding:10px 14px;transform:rotate(-8deg);box-shadow:4px 4px 0 var(--shadow)}
+.race-lane{background:var(--paper);border:2px solid var(--border-hi);border-radius:12px 4px 12px 4px;padding:10px 14px}
+.race-meta{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px}
+.race-track{height:20px;border:2px solid var(--border-hi);border-radius:8px 3px 8px 3px;overflow:hidden;background:var(--well);position:relative}
+.race-fill{height:100%;transition:width .12s linear}
+.race-fill.p1{background:repeating-linear-gradient(-35deg,var(--orange) 0 8px,#D67622 8px 16px)}
+.race-fill.p2{background:repeating-linear-gradient(45deg,var(--teal) 0 8px,var(--teal2) 8px 16px)}
+.arena-panes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+@media (max-width:960px){.arena-panes{grid-template-columns:1fr}}
+.arena-pane{position:relative;border:2px solid var(--border-hi);border-radius:14px 5px 14px 6px;padding:14px;background:var(--paper)}
+.win-stamp{position:absolute;top:14px;right:16px;z-index:4}
+.arena-scene{height:270px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- Mockup switcher -->
+<div class="mockbar">
+  <span class="sig"><b>CONCEPT MOCKUP</b> · Rush01 Game Layout · Antigravity (Gemini)</span>
+  <button class="btn small on" data-screen="team" type="button">1. Team Cockpit</button>
+  <button class="btn small" data-screen="dash" type="button">2. Fighter Select</button>
+  <button class="btn small" data-screen="arena" type="button">3. VS Arena Race</button>
+  <button class="btn small" id="themeBtn" type="button" title="toggle theme">&#9728; paper</button>
+</div>
+
+<!-- ====================================================================== -->
+<!-- SCREEN 1: TEAM COCKPIT                                                 -->
+<!-- ====================================================================== -->
+<section id="scr-team">
+  <header class="band">
+    <div>
+      <p class="kicker">STAGE · TEAM DEFENSE</p>
+      <h1>c01</h1>
+      <p class="sub">evaluated 2026-11-23 00:45 · ex00/ · drag 3D board or click any clue</p>
+    </div>
+    <span class="sp"></span>
+    <div class="hud"><span class="lv">RUNS</span><span>PASS</span><span class="n">11/22</span><span class="bar"><i style="width:50%"></i></span></div>
+  </header>
+
+  <!-- Proposal A: Eval Sheet Checkpoint / Gate Track -->
+  <div class="gates" aria-label="Evaluation sheet gates">
+    <button class="gate stop" data-jump="defense" type="button"><span class="gstep">GATE 1</span><span class="gname">Norminette</span><span class="gstat">STOP · 4 errors</span></button>
+    <button class="gate ok" data-jump="defense" type="button"><span class="gstep">GATE 2</span><span class="gname">Compile</span><span class="gstat">✓ builds clean</span></button>
+    <button class="gate ok" data-jump="defense" type="button"><span class="gstep">GATE 3</span><span class="gname">Allowed Calls</span><span class="gstat">✓ write only</span></button>
+    <button class="gate stop" data-jump="runs" type="button"><span class="gstep">GATE 4</span><span class="gname">6 Eliminatory</span><span class="gstat">STOP · 1/6 pass</span></button>
+    <button class="gate na" data-jump="defense" type="button"><span class="gstep">GATE 5</span><span class="gname">Malloc Break</span><span class="gstat">— no malloc</span></button>
+    <button class="gate na" data-jump="runs" type="button"><span class="gstep">GATE 6</span><span class="gname">Bonus N×N</span><span class="gstat">not counted</span></button>
+  </div>
+
+  <!-- Proposal B: Hero 3D Stage (left) + Team Build Loadout (right) -->
+  <div class="cockpit">
+    <div class="card">
+      <span class="tape"></span>
+      <div class="sky-bar">
+        <h3>Their Output · 3D Stage</h3>
+        <span class="sp"></span>
+        <select class="sky-pick" id="t-pick">
+          <option value="ok4-02">ok4-02 · fail · 4×4 (6 broken)</option>
+          <option value="ok4-01">ok4-01 · pass · 4×4 (all hold)</option>
+        </select>
+        <button class="btn small" data-tview="top" type="button">top</button>
+        <button class="btn small" data-tview="front" type="button">front</button>
+        <button class="btn small" data-tview="iso" type="button">iso</button>
+        <button class="btn small" id="t-mode" type="button">2D</button>
+      </div>
+      <div class="sky-scene" id="t-scene" title="drag to rotate">
+        <div class="sky-board" id="t-board"></div>
+      </div>
+      <div class="sky-flat" id="t-flat" hidden></div>
+      <p class="sky-line" id="t-line">Drag to turn · click any clue chip around the board to highlight its sightline.</p>
+      <div class="diag-strip"><b>Diagnosis:</b> 8 of 8 failures fit — rows and columns swapped (transposed).</div>
+    </div>
+
+    <div class="card">
+      <span class="tape"></span>
+      <p class="lab">LIVES</p>
+      <div class="hearts">
+        <div class="heart">
+          <svg width="44" height="38" viewBox="-27 -26 54 46"><path d="M0 14 C-34 -12 -18 -38 0 -18 C18 -38 34 -12 0 14 Z" fill="var(--teal)" stroke="var(--ink)" stroke-width="4" transform="scale(.75)"/></svg>
+          <span>builds</span>
+        </div>
+        <div class="heart">
+          <svg width="44" height="38" viewBox="-27 -26 54 46"><path d="M0 14 C-34 -12 -18 -38 0 -18 C18 -38 34 -12 0 14 Z" fill="var(--teal)" stroke="var(--ink)" stroke-width="4" transform="scale(.75)"/></svg>
+          <span>allowed only</span>
+        </div>
+        <div class="heart bad">
+          <svg width="44" height="38" viewBox="-27 -26 54 46"><g fill="none" stroke="var(--ink)" stroke-width="4" transform="scale(.75)"><path d="M0 14 C-34 -12 -18 -38 0 -18 C18 -38 34 -12 0 14 Z"/><path d="M0 -18 L-6 -6 L4 0 L-2 12" stroke="var(--orange)"/></g></svg>
+          <span>norm (4)</span>
+        </div>
+      </div>
+
+      <p class="lab">TEAM BUILD · LOADOUT (CLICK SLOT FOR EVIDENCE)</p>
+      <div class="loadout" id="loadout">
+        <div class="slot" data-slot="parse">
+          <div class="slot-top"><span class="slot-k">PARSE</span><span class="slot-name">Scan and count</span><span class="st ok">clear</span></div>
+          <div class="slot-ev" hidden><code>main.c:12  if (str[i] &gt;= '1' &amp;&amp; str[i] &lt;= '9')</code><br>Walks argv[1] once, derives N from count.</div>
+        </div>
+        <div class="slot" data-slot="data">
+          <div class="slot-top"><span class="slot-k">DATA</span><span class="slot-name">2D array</span><span class="st na">likely</span></div>
+          <div class="slot-ev" hidden><code>main.c:42  int grid[9][9];</code><br>Fixed 2D board, flat <code>clues[36]</code>.</div>
+        </div>
+        <div class="slot open" data-slot="solve">
+          <div class="slot-top"><span class="slot-k">SOLVE</span><span class="slot-name">Backtracking + line check</span><span class="tier">T1</span></div>
+          <div class="slot-ev"><code>solve.c:82  if ((pos % n != n - 1 || row_ok(...)))</code><br>Checks row/col clues as soon as a line finishes. <button class="btn small" style="margin-top:6px" data-screen="arena" type="button">&#9654; Race in VS Arena</button></div>
+        </div>
+        <div class="slot" data-slot="print">
+          <div class="slot-top"><span class="slot-k">PRINT</span><span class="slot-name">One write per char</span><span class="st ok">clear</span></div>
+          <div class="slot-ev" hidden><code>print.c:14  write(1, &amp;c, 1);</code><br>No trailing space; writes <code>Error\n</code> on fail.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Physical Notebook Divider Tabs -->
+  <div class="deck">
+    <div class="nb-tabs" role="tablist">
+      <button class="nb-tab warn on" data-nb="defense" type="button">Defense &amp; Ask (2)</button>
+      <button class="nb-tab" data-nb="runs" type="button">Bank Runs (11/22)</button>
+      <button class="nb-tab" data-nb="code" type="button">Blueprints (Graph + Code)</button>
+      <button class="nb-tab" data-nb="all" type="button">All (Ctrl+F)</button>
+    </div>
+    <div class="card nb-body">
+      <div class="nb-pane" data-pane="defense">
+        <h3>Lines to Ask About (Eval Sheet)</h3>
+        <div class="ask-row"><span class="st na">complex</span> <code>ex00/solve.c:82</code> <code>if ((pos % n != n - 1 || row_ok(grid, clues, n, pos / n)))</code> — <span class="sub">13 operators, 3 lines: ask what this does</span></div>
+        <div class="ask-row"><span class="st na">recursion</span> <code>ex00/solve.c:70</code> <code>int solve(int grid[9][9], int *clues, int n, int pos)</code> — <span class="sub">ask base case &amp; failure return</span></div>
+      </div>
+      <div class="nb-pane" data-pane="runs" hidden>
+        <h3>Bank Runs (click 3D to load straight into Hero Stage above)</h3>
+        <table class="runs">
+          <thead><tr><th>id</th><th>verdict</th><th>ms</th><th>output</th><th>why</th><th></th></tr></thead>
+          <tbody>
+            <tr><td><code>ok4-01</code></td><td><span class="st ok">pass</span></td><td>0</td><td>grid 4×4</td><td>every clue holds</td><td><button class="btn small" data-loadrun="ok4-01" type="button">3D</button></td></tr>
+            <tr><td><code>ok4-02</code></td><td><span class="st bad">fail</span></td><td>0</td><td>grid 4×4</td><td>breaks 6 of 16 clues (transposed)</td><td><button class="btn small" data-loadrun="ok4-02" type="button">3D</button></td></tr>
+            <tr><td><code>fmt-03</code></td><td><span class="st bad">fail</span></td><td>0</td><td>unparsed</td><td>trailing space accepted</td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="nb-pane" data-pane="code" hidden>
+        <h3>Blueprints · ex00/solve.c</h3>
+        <pre class="fake-code"><span class="kw">int</span> solve(<span class="kw">int</span> grid[9][9], <span class="kw">int</span> *clues, <span class="kw">int</span> n, <span class="kw">int</span> pos)
+{
+    <span class="cm">/* checks row &amp; column visibility when a line completes */</span>
+<span class="hl">    <span class="kw">if</span> ((pos % n != n - 1 || row_ok(grid, clues, n, pos / n))</span>
+        &amp;&amp; (pos / n != n - 1 || col_ok(grid, clues, n, pos % n))
+        &amp;&amp; solve(grid, clues, n, pos + 1))
+        <span class="kw">return</span> (1);
+}</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================================================================== -->
+<!-- SCREEN 2: DASHBOARD — ARCADE FIGHTER SELECT                            -->
+<!-- ====================================================================== -->
+<section id="scr-dash" hidden>
+  <header class="band">
+    <div>
+      <p class="kicker">LEVEL 1 · FIGHTER SELECT</p>
+      <h1>Rush01</h1>
+      <p class="sub">arrow keys ↑/↓ pick a team · preview updates live without leaving the screen</p>
+    </div>
+    <span class="sp"></span>
+    <div class="hud"><span class="lv">CLEAR</span><span class="n">1/4</span><span class="bar"><i style="width:25%"></i></span></div>
+  </header>
+
+  <div class="fselect">
+    <aside class="card roster-box">
+      <div class="roster-top">
+        <input id="f-find" type="search" placeholder="filter teams...">
+        <button class="btn small" type="button">+ add</button>
+      </div>
+      <ul class="roster-list" id="f-roster"></ul>
+    </aside>
+
+    <div class="card" id="f-preview">
+      <span class="tape"></span>
+      <div id="f-preview-body"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================================================================== -->
+<!-- SCREEN 3: LIBRARY COMPARE — VS ARENA SOLVER RACE                       -->
+<!-- ====================================================================== -->
+<section id="scr-arena" hidden>
+  <header class="band">
+    <div>
+      <p class="kicker">TRAINING DOJO · VS ARENA</p>
+      <h1>Solver Race</h1>
+      <p class="sub">same asymmetric 4×4 puzzle · watch why line-end pruning crushes naive backtracking (presets, not student code)</p>
+    </div>
+    <span class="sp"></span>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn small" id="vs-reset" type="button">&#8634; reset</button>
+      <button class="btn go" id="vs-play" type="button">&#9654; RACE!</button>
+      <button class="btn small" id="vs-step" type="button">&#9654;| step</button>
+    </div>
+  </header>
+
+  <div class="card">
+    <span class="tape"></span>
+    <div class="vs-head">
+      <div class="race-lane">
+        <div class="race-meta"><b>P1 · T0 Check-at-End</b><span class="sub" id="p1-stat">step 0 / 416</span></div>
+        <div class="race-track"><div class="race-fill p1" id="p1-bar" style="width:0%"></div></div>
+      </div>
+      <div class="vs-badge">VS</div>
+      <div class="race-lane">
+        <div class="race-meta"><b>P2 · T1 Line-Check Pruning</b><span class="sub" id="p2-stat">step 0 / 88</span></div>
+        <div class="race-track"><div class="race-fill p2" id="p2-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="arena-panes">
+      <div class="arena-pane">
+        <span class="stamp ok win-stamp" id="p1-win" hidden>SOLVED<small>416 steps</small></span>
+        <h3>T0 · Backtracking (check at end)</h3>
+        <div class="sky-scene arena-scene" id="vs-s1" title="drag to rotate"><div class="sky-board" id="vs-b1"></div></div>
+        <p class="sky-line" id="vs-c1">Waits until all 16 cells are full before checking clues.</p>
+      </div>
+      <div class="arena-pane">
+        <span class="stamp ok win-stamp" id="p2-win" hidden>WINNER!<small>88 steps · 4.7× faster</small></span>
+        <h3>T1 · Backtracking + line-end check</h3>
+        <div class="sky-scene arena-scene" id="vs-s2" title="drag to rotate"><div class="sky-board" id="vs-b2"></div></div>
+        <p class="sky-line" id="vs-c2">Prunes each row and column the instant it completes.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+<script>
+"use strict";
+
+/* ---- tiny helpers ---- */
+const SIDES = ["top", "bottom", "left", "right"];
+const VIEWS = {top: [0, 0], front: [74, 0], iso: [58, -34]};
+const $ = (s) => document.querySelector(s);
+
+function line_cells(n, side, i)
+{
+	const out = [];
+	for (let k = 0; k < n; k++)
+		out.push(side === "top" ? [k, i] : side === "bottom" ? [n - 1 - k, i] : side === "left" ? [i, k] : [i, n - 1 - k]);
+	return out;
+}
+function seen_info(hs)
+{
+	let max = 0, cnt = 0;
+	const vis = hs.map((h) => { if (h > max) { max = h; cnt++; return true; } return false; });
+	return {count: cnt, vis};
+}
+function clue_pos(n, k)
+{
+	const s = SIDES[Math.floor(k / n)], i = k % n;
+	return s === "top" ? [-1, i] : s === "bottom" ? [n, i] : s === "left" ? [i, -1] : [i, n];
+}
+function box_html(h, rc, size, unit, foot, cls)
+{
+	const tall = h * unit;
+	const pos = `left:${(rc[1] + 1) * size + 3}px;top:${(rc[0] + 1) * size + 3}px;width:${foot}px;height:${foot}px`;
+	if (!tall)
+		return `<div class="sky-box${cls}" style="${pos}"><div class="f top" style="width:${foot}px;height:${foot}px;border-style:dashed;background:transparent;transform:translateZ(1px)"><span>·</span></div></div>`;
+	const half = tall / 2;
+	const ns = `width:${foot}px;height:${tall}px;left:0;top:${(foot - tall) / 2}px;--floor:${unit}px`;
+	const ew = `width:${tall}px;height:${foot}px;top:0;left:${(foot - tall) / 2}px;--floor:${unit}px`;
+	return `<div class="sky-box${cls}" style="${pos}">`
+		+ `<div class="f ns" style="${ns};transform:translateZ(${half}px) rotateX(90deg) translateZ(${foot / 2}px)"></div>`
+		+ `<div class="f ns" style="${ns};transform:translateZ(${half}px) rotateX(-90deg) translateZ(${foot / 2}px)"></div>`
+		+ `<div class="f ew" style="${ew};transform:translateZ(${half}px) rotateY(90deg) translateZ(${foot / 2}px)"></div>`
+		+ `<div class="f ew" style="${ew};transform:translateZ(${half}px) rotateY(-90deg) translateZ(${foot / 2}px)"></div>`
+		+ `<div class="f top" style="width:${foot}px;height:${foot}px;transform:translateZ(${tall}px)"><span>${h}</span></div></div>`;
+}
+
+function attach_drag(scene, st, turn_fn)
+{
+	scene.addEventListener("pointerdown", (ev) => {
+		const x0 = ev.clientX, y0 = ev.clientY, rx0 = st.rx, rz0 = st.rz;
+		st.dragged = false;
+		const move = (e) => {
+			if (Math.abs(e.clientX - x0) + Math.abs(e.clientY - y0) > 3) st.dragged = true;
+			st.rz = rz0 - (e.clientX - x0) * 0.4;
+			st.rx = Math.max(0, Math.min(88, rx0 - (e.clientY - y0) * 0.4));
+			turn_fn();
+		};
+		const up = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); };
+		window.addEventListener("pointermove", move);
+		window.addEventListener("pointerup", up);
+	});
+}
+
+/* ---- top mockup nav + theme toggle ---- */
+function show_screen(name)
+{
+	for (const id of ["team", "dash", "arena"])
+		$("#scr-" + id).hidden = id !== name;
+	for (const b of document.querySelectorAll(".mockbar [data-screen]"))
+		b.classList.toggle("on", b.dataset.screen === name);
+}
+document.addEventListener("click", (ev) => {
+	const s = ev.target.closest("[data-screen]");
+	if (s) show_screen(s.dataset.screen);
+});
+$("#themeBtn").onclick = () => {
+	const r = document.documentElement;
+	const dark = r.getAttribute("data-theme") !== "dark";
+	if (dark) r.setAttribute("data-theme", "dark"); else r.removeAttribute("data-theme");
+	$("#themeBtn").innerHTML = dark ? "&#9728; paper" : "&#9790; night";
+};
+
+/* ---- Screen 1: Team Cockpit 3D + Loadout + Notebook Tabs ---- */
+const RUNS = {
+	"ok4-02": {
+		clues: [2, 1, 2, 2, 3, 4, 2, 1, 2, 1, 2, 3, 2, 3, 2, 1],
+		grid: [[1, 4, 3, 2], [4, 3, 2, 1], [2, 1, 4, 3], [3, 2, 1, 4]]
+	},
+	"ok4-01": {
+		clues: [4, 3, 2, 1, 1, 2, 2, 2, 4, 3, 2, 1, 1, 2, 2, 2],
+		grid: [[1, 2, 3, 4], [2, 3, 4, 1], [3, 4, 1, 2], [4, 1, 2, 3]]
+	}
+};
+const ts = {run: "ok4-02", rx: 58, rz: -34, sel: -1, flat: false, lift: 20, dragged: false};
+
+function team_turn()
+{
+	const b = $("#t-board");
+	b.style.transform = `rotateX(${ts.rx}deg) rotateZ(${ts.rz}deg)`;
+	for (const c of b.querySelectorAll(".sky-clue"))
+		c.style.transform = `translateZ(${ts.lift}px) rotateZ(${-ts.rz}deg) rotateX(${-ts.rx}deg)`;
+}
+function team_draw_sky()
+{
+	const {clues, grid} = RUNS[ts.run];
+	const n = 4, size = 56, unit = 26, foot = 50;
+	ts.lift = 20;
+	const counts = [];
+	for (let k = 0; k < 16; k++)
+	{
+		const hs = line_cells(n, SIDES[Math.floor(k / n)], k % n).map((rc) => grid[rc[0]][rc[1]]);
+		counts.push(seen_info(hs).count);
+	}
+	const role = {};
+	if (ts.sel >= 0)
+	{
+		const s = SIDES[Math.floor(ts.sel / n)], idx = ts.sel % n;
+		const cells = line_cells(n, s, idx);
+		const si = seen_info(cells.map((rc) => grid[rc[0]][rc[1]]));
+		cells.forEach((rc, i) => { role[rc[0] + "," + rc[1]] = si.vis[i] ? " seen" : " hidden"; });
+		$("#t-line").innerHTML = `${s} clue ${idx + 1} = <b>${clues[ts.sel]}</b> · grid shows <b>${si.count}</b> (${si.count === clues[ts.sel] ? '<span style="color:var(--teal)">matches</span>' : '<span style="color:var(--orange-t)">mismatch</span>'})`;
+	}
+	else
+		$("#t-line").textContent = "Drag to turn · click any clue chip around the board to highlight its sightline.";
+
+	/* 3D */
+	let html = `<div class="sky-ground" style="left:${size}px;top:${size}px;width:${n * size}px;height:${n * size}px;background-size:${size}px ${size}px"></div>`;
+	for (let k = 0; k < 16; k++)
+	{
+		const rc = clue_pos(n, k);
+		const cls = (counts[k] === clues[k] ? " ok" : " bad") + (k === ts.sel ? " on" : "");
+		html += `<button type="button" class="sky-clue${cls}" data-tk="${k}" style="left:${(rc[1] + 1) * size}px;top:${(rc[0] + 1) * size}px;width:${size}px;height:${size}px"><span class="chip">${clues[k]}</span><span class="cnt">${k === ts.sel ? counts[k] : ""}</span></button>`;
+	}
+	for (let r = 0; r < n; r++)
+		for (let c = 0; c < n; c++)
+			html += box_html(grid[r][c], [r, c], size, unit, foot, role[r + "," + c] || (ts.sel >= 0 ? " off" : ""));
+	const b = $("#t-board");
+	b.style.width = b.style.height = (n + 2) * size + "px";
+	b.style.fontSize = "22px";
+	b.innerHTML = html;
+	team_turn();
+
+	/* 2D */
+	let fhtml = "";
+	for (let r = -1; r <= n; r++)
+	{
+		for (let c = -1; c <= n; c++)
+		{
+			const k = r === -1 && c >= 0 && c < n ? c : r === n && c >= 0 && c < n ? n + c : c === -1 && r >= 0 && r < n ? 2 * n + r : c === n && r >= 0 && r < n ? 3 * n + r : -1;
+			if (k >= 0)
+			{
+				const cls = (counts[k] === clues[k] ? " ok" : " bad") + (k === ts.sel ? " on" : "");
+				fhtml += `<button type="button" class="sky-clue${cls}" data-tk="${k}"><span class="chip">${clues[k]}</span><span class="cnt">${k === ts.sel ? counts[k] : ""}</span></button>`;
+			}
+			else if (r < 0 || c < 0 || r === n || c === n) fhtml += "<span></span>";
+			else fhtml += `<span class="sky-cell${role[r + "," + c] || (ts.sel >= 0 ? " off" : "")}" style="--shade:${(grid[r][c] / n).toFixed(2)}">${grid[r][c]}</span>`;
+		}
+	}
+	$("#t-flat").style.gridTemplateColumns = "repeat(6,minmax(0,1fr))";
+	$("#t-flat").innerHTML = fhtml;
+	$("#t-scene").hidden = ts.flat;
+	$("#t-flat").hidden = !ts.flat;
+	$("#t-mode").textContent = ts.flat ? "3D" : "2D";
+}
+attach_drag($("#t-scene"), ts, team_turn);
+$("#scr-team").addEventListener("click", (ev) => {
+	const cl = ev.target.closest("[data-tk]");
+	if (cl && !ts.dragged) { ts.sel = ts.sel === Number(cl.dataset.tk) ? -1 : Number(cl.dataset.tk); team_draw_sky(); }
+	const vw = ev.target.closest("[data-tview]");
+	if (vw) { ts.flat = false; [ts.rx, ts.rz] = VIEWS[vw.dataset.tview]; team_draw_sky(); }
+	const sl = ev.target.closest(".slot");
+	if (sl && !ev.target.closest("button"))
+	{
+		sl.classList.toggle("open");
+		sl.querySelector(".slot-ev").hidden = !sl.classList.contains("open");
+	}
+	const tab = ev.target.closest("[data-nb]");
+	if (tab) set_nb_tab(tab.dataset.nb);
+	const jmp = ev.target.closest("[data-jump]");
+	if (jmp) { set_nb_tab(jmp.dataset.jump); $(".deck").scrollIntoView({behavior: "smooth", block: "nearest"}); }
+	const lr = ev.target.closest("[data-loadrun]");
+	if (lr) { ts.run = lr.dataset.loadrun; ts.sel = -1; $("#t-pick").value = ts.run; team_draw_sky(); $("#t-scene").scrollIntoView({behavior: "smooth", block: "center"}); }
+});
+$("#t-mode").onclick = () => { ts.flat = !ts.flat; team_draw_sky(); };
+$("#t-pick").onchange = (e) => { ts.run = e.target.value; ts.sel = -1; team_draw_sky(); };
+function set_nb_tab(name)
+{
+	for (const b of document.querySelectorAll("[data-nb]")) b.classList.toggle("on", b.dataset.nb === name);
+	for (const p of document.querySelectorAll("[data-pane]")) p.hidden = name !== "all" && p.dataset.pane !== name;
+}
+team_draw_sky();
+
+/* ---- Screen 2: Fighter Select Dashboard ---- */
+const TEAMS = [
+	{name: "c01", stamp: "11 FAIL", cls: "bad", small: "of 22 runs", gates: [["Norm", "stop"], ["Build", "ok"], ["Calls", "ok"], ["Elim 1/6", "stop"], ["Bonus", "na"]],
+		build: ["Scan & count", "2D array", "T1 Line-check BT", "1 write/char"], diag: "8 of 8 failures fit: rows and columns swapped (transposed).", ok4: 17, fmt: 75},
+	{name: "c08", stamp: "ALL PASS", cls: "ok", small: "22 runs", gates: [["Norm", "ok"], ["Build", "ok"], ["Calls", "ok"], ["Elim 6/6", "ok"], ["Bonus 6×6", "ok"]],
+		build: ["Strict format", "Flat 1D", "T2 Pre-fill + BT", "Row buffer"], diag: "Every bank run passes; bonus verified up to 6×6.", ok4: 100, fmt: 100},
+	{name: "d3", stamp: "NO BUILD", cls: "bad", small: "no runs", gates: [["Norm 8", "stop"], ["Build", "stop"], ["atoi, printf", "stop"], ["Elim", "na"], ["Bonus", "na"]],
+		build: ["atoi per token", "Struct board", "T2 Pre-fill + BT", "? unrecognized"], diag: "Does not build: main.c:21 expected ';'. Calls forbidden atoi, printf.", ok4: 0, fmt: 0},
+	{name: "b2", stamp: "4 FAIL", cls: "bad", small: "of 22 runs", gates: [["Norm", "ok"], ["Build", "ok"], ["Calls", "ok"], ["Elim 6/6", "ok"], ["Malloc crash", "stop"]],
+		build: ["Scan & count", "malloc 2D", "T1 Row perm", "1 write/char"], diag: "Eliminatory tests pass, but unchecked malloc #2 segfaults under fault injection.", ok4: 100, fmt: 50}
+];
+let sel_i = 0;
+function draw_fighter(q)
+{
+	const list = TEAMS.filter((t) => !q || t.name.includes(q.toLowerCase()));
+	if (sel_i >= list.length) sel_i = 0;
+	$("#f-roster").innerHTML = list.map((t, i) => `<li class="roster-item${i === sel_i ? " on" : ""}" data-fi="${i}"><span class="st ${t.cls}" style="padding:0 4px;font-size:11px">${t.cls === "ok" ? "✓" : "✗"}</span><span class="rnm">${t.name}</span><span class="rmeta">${t.build[2]}</span><span class="st ${t.cls}">${t.stamp}</span></li>`).join("");
+	const t = list[sel_i];
+	if (!t) { $("#f-preview-body").innerHTML = "<p class='sub'>No team matches.</p>"; return; }
+	$("#f-preview-body").innerHTML = `<div class="hero-head"><div><p class="kicker">SELECTED FIGHTER · ${sel_i + 1}/${list.length}</p><h2>${t.name}</h2></div><span class="stamp ${t.cls}">${t.stamp}<small>${t.small}</small></span></div>`
+		+ `<div class="mini-gates">${t.gates.map((g) => `<span class="mg ${g[1]}">${g[0]}</span>`).join("")}</div>`
+		+ `<p class="lab">LOADOUT</p><div class="mini-gates">${["PARSE", "DATA", "SOLVE", "PRINT"].map((p, i) => `<span class="mg"><b>${p}</b> ${t.build[i]}</span>`).join("")}</div>`
+		+ `<div class="stg-bar ${t.ok4 < 100 ? "bad" : ""}"><span>ok4</span><span class="track"><i style="width:${t.ok4}%"></i></span><span>${t.ok4}%</span></div>`
+		+ `<div class="stg-bar ${t.fmt < 100 ? "bad" : ""}"><span>fmt</span><span class="track"><i style="width:${t.fmt}%"></i></span><span>${t.fmt}%</span></div>`
+		+ `<div class="diag-strip" style="border-left-color:${t.cls === "ok" ? "var(--teal)" : "var(--orange)"};color:${t.cls === "ok" ? "var(--teal)" : "var(--orange-t)"}">${t.diag}</div>`
+		+ `<div style="margin-top:16px;display:flex;gap:12px"><button class="btn go" data-screen="team" type="button">&#9654; START DEFENSE</button><button class="btn" type="button">Re-run</button></div>`;
+}
+$("#f-roster").addEventListener("click", (ev) => { const li = ev.target.closest("[data-fi]"); if (li) { sel_i = Number(li.dataset.fi); draw_fighter($("#f-find").value); } });
+$("#f-find").oninput = () => draw_fighter($("#f-find").value);
+document.addEventListener("keydown", (ev) => {
+	if ($("#scr-dash").hidden || document.activeElement.tagName === "INPUT") return;
+	if (ev.key === "ArrowDown") { ev.preventDefault(); sel_i = Math.min(TEAMS.length - 1, sel_i + 1); draw_fighter($("#f-find").value); }
+	if (ev.key === "ArrowUp") { ev.preventDefault(); sel_i = Math.max(0, sel_i - 1); draw_fighter($("#f-find").value); }
+	if (ev.key === "Enter") show_screen("team");
+});
+draw_fighter("");
+
+/* ---- Screen 3: VS Arena Solver Race (live mini simulation) ---- */
+const ASYM_SOL = [[2, 1, 4, 3], [3, 4, 2, 1], [4, 2, 1, 3], [1, 3, 3, 2]];
+const FINAL_SOL = [[2, 1, 4, 3], [3, 4, 2, 1], [4, 2, 1, 3], [1, 3, 2, 4]];
+const CLUES_VS = [2, 2, 1, 2, 3, 2, 2, 1, 2, 2, 1, 3, 2, 3, 2, 1];
+const v1 = {rx: 56, rz: -34, lift: 15, step: 0, max: 416};
+const v2 = {rx: 56, rz: -34, lift: 15, step: 0, max: 88};
+let race_timer = null;
+
+function draw_vs_board(el, st, grid, focus, bad)
+{
+	const n = 4, size = 40, unit = 18, foot = 35;
+	let html = `<div class="sky-ground" style="left:${size}px;top:${size}px;width:${n * size}px;height:${n * size}px;background-size:${size}px ${size}px"></div>`;
+	for (let k = 0; k < 16; k++)
+	{
+		const rc = clue_pos(n, k);
+		html += `<div class="sky-clue${st.step >= st.max ? " ok" : ""}" style="left:${(rc[1] + 1) * size}px;top:${(rc[0] + 1) * size}px;width:${size}px;height:${size}px"><span class="chip">${CLUES_VS[k]}</span></div>`;
+	}
+	for (let r = 0; r < n; r++)
+		for (let c = 0; c < n; c++)
+			html += box_html(grid[r][c], [r, c], size, unit, foot, focus && focus[0] === r && focus[1] === c ? (bad ? " bad" : " seen") : "");
+	el.style.width = el.style.height = (n + 2) * size + "px";
+	el.style.fontSize = "16px";
+	el.innerHTML = html;
+	el.style.transform = `rotateX(${st.rx}deg) rotateZ(${st.rz}deg)`;
+	for (const ch of el.querySelectorAll(".sky-clue"))
+		ch.style.transform = `translateZ(${st.lift}px) rotateZ(${-st.rz}deg) rotateX(${-st.rx}deg)`;
+}
+function synth_grid(step, max)
+{
+	const g = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]];
+	const filled = step >= max ? 16 : Math.min(15, Math.floor((step / max) * 14) + ((step % 5) === 4 ? 0 : 1));
+	for (let i = 0; i < filled; i++)
+	{
+		const r = Math.floor(i / 4), c = i % 4;
+		g[r][c] = step >= max ? FINAL_SOL[r][c] : ((i === filled - 1 && step % 3 === 0) ? ((FINAL_SOL[r][c] % 4) + 1) : FINAL_SOL[r][c]);
+	}
+	const f = filled > 0 && step < max ? [Math.floor((filled - 1) / 4), (filled - 1) % 4] : null;
+	return {g, f, bad: step < max && step % 3 === 0};
+}
+function render_vs()
+{
+	const s1 = synth_grid(v1.step, v1.max), s2 = synth_grid(v2.step, v2.max);
+	draw_vs_board($("#vs-b1"), v1, s1.g, s1.f, s1.bad);
+	draw_vs_board($("#vs-b2"), v2, s2.g, s2.f, s2.bad);
+	$("#p1-stat").textContent = `step ${v1.step} / ${v1.max}`;
+	$("#p2-stat").textContent = `step ${v2.step} / ${v2.max}`;
+	$("#p1-bar").style.width = Math.round(100 * v1.step / v1.max) + "%";
+	$("#p2-bar").style.width = Math.round(100 * v2.step / v2.max) + "%";
+	$("#p1-win").hidden = v1.step < v1.max;
+	$("#p2-win").hidden = v2.step < v2.max;
+	$("#vs-c1").textContent = v1.step >= v1.max ? "Solved after 416 steps (checked clues only on full grids)." : (s1.bad ? "Full grid failed clue check → backtracking..." : "Trying next cell...");
+	$("#vs-c2").textContent = v2.step >= v2.max ? "DONE in 88 steps! (waiting for P1...)" : (s2.bad ? "Row clue mismatch → pruned early!" : "Line holds → advancing...");
+}
+attach_drag($("#vs-s1"), v1, render_vs);
+attach_drag($("#vs-s2"), v2, render_vs);
+function stop_race() { if (race_timer) { clearInterval(race_timer); race_timer = null; } $("#vs-play").innerHTML = "&#9654; RACE!"; }
+$("#vs-reset").onclick = () => { stop_race(); v1.step = 0; v2.step = 0; render_vs(); };
+$("#vs-step").onclick = () => { stop_race(); v1.step = Math.min(v1.max, v1.step + 8); v2.step = Math.min(v2.max, v2.step + 8); render_vs(); };
+$("#vs-play").onclick = () => {
+	if (race_timer) { stop_race(); return; }
+	if (v1.step >= v1.max) { v1.step = 0; v2.step = 0; }
+	$("#vs-play").innerHTML = "&#9646;&#9646; Pause";
+	race_timer = setInterval(() => {
+		v1.step = Math.min(v1.max, v1.step + 6);
+		v2.step = Math.min(v2.max, v2.step + 6);
+		render_vs();
+		if (v1.step >= v1.max && v2.step >= v2.max) stop_race();
+	}, 70);
+};
+render_vs();
+</script>
+</body>
+</html>

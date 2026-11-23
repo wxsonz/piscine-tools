@@ -1,0 +1,10 @@
+# parser reads s[i * 2] past the end of a malloc'd copy (heap-buffer-overflow on "" and "4 3")
+built = yes
+ex_dir = yes
+forbidden = none
+group.ok4 = pass
+group.fmt = pass
+group.nosol4-easy = pass
+diagnosis = none
+sanitizer = finding
+norm = ok

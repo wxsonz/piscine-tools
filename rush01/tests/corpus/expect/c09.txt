@@ -1,0 +1,13 @@
+# c09: no validation: some fmt inputs give a grid
+parse = parse.none
+data = data.grid2d
+solve = solve.brute_perm_loops
+print = print.char
+built = yes
+ex_dir = yes
+forbidden = none
+group.ok4 = pass
+group.fmt = fail
+group.nosol4-easy = pass
+sanitizer = clean
+diagnosis = none

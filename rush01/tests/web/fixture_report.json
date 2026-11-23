@@ -1,0 +1,1757 @@
+{
+ "team": "c01",
+ "team_dir_abs": "/fixture/repo/c01",
+ "made_at": "2026-11-22T03:22:35",
+ "subject": {
+  "name": "rush01",
+  "turn_in_dir": "ex00",
+  "binary": "rush01",
+  "build": [
+   "cc",
+   "-Wall",
+   "-Wextra",
+   "-Werror",
+   "-o",
+   "rush01"
+  ],
+  "sizes": [
+   4
+  ],
+  "bonus_sizes": [
+   5,
+   6,
+   7,
+   8,
+   9
+  ],
+  "allowed": [
+   "write",
+   "malloc",
+   "free"
+  ],
+  "error_text": "Error\n",
+  "error_on_stderr": "note",
+  "norm_flags": [
+   "-R",
+   "CheckForbiddenSourceHeader"
+  ],
+  "sheet_binary": "rush-01"
+ },
+ "judge": {
+  "ex_dir": "ex00",
+  "built": true,
+  "build_log": "",
+  "files": {
+   "sources": [
+    "ex00/main.c",
+    "ex00/print.c",
+    "ex00/solve.c"
+   ],
+   "headers": [
+    "ex00/rush.h"
+   ],
+   "flagged": [],
+   "no_ex_dir": false
+  },
+  "forbidden": {
+   "names": [],
+   "notes": []
+  },
+  "norm": {
+   "ran": true,
+   "ok": false,
+   "errors": [
+    {
+     "file": "ex00/main.c",
+     "line": 1,
+     "text": "INVALID_HEADER"
+    },
+    {
+     "file": "ex00/print.c",
+     "line": 1,
+     "text": "INVALID_HEADER"
+    },
+    {
+     "file": "ex00/solve.c",
+     "line": 1,
+     "text": "INVALID_HEADER"
+    },
+    {
+     "file": "ex00/rush.h",
+     "line": 1,
+     "text": "INVALID_HEADER"
+    }
+   ],
+   "note": ""
+  },
+  "sanitizer": {
+   "ran": true,
+   "findings": [],
+   "note": ""
+  },
+  "runs": [
+   {
+    "id": "ok4-01",
+    "group": "ok4",
+    "argv": [
+     "4 3 2 1 1 2 2 2 4 3 2 1 1 2 2 2"
+    ],
+    "expect": "grid",
+    "stdout": "1 2 3 4\n2 3 4 1\n3 4 1 2\n4 1 2 3\n",
+    "stderr": "",
+    "exit": 0,
+    "signal": null,
+    "timed_out": false,
+    "time_ms": 0,
+    "verdict": "pass",
+    "reasons": [],
+    "notes": [],
+    "grid": [
+     [
+      1,
+      2,
+      3,
+      4
+     ],
+     [
+      2,
+      3,
+      4,
+      1
+     ],
+     [
+      3,
+      4,
+      1,
+      2
+     ],
+     [
+      4,
+      1,
+      2,
+      3
+     ]
+    ],
+    "broken": []
+   },
+   {
+    "id": "ok4-02",
+    "group": "ok4",
+    "argv": [
+     "2 1 2 2 3 4 2 1 2 1 2 3 2 3 2 1"
+    ],
+    "expect": "grid",
+    "stdout": "1 4 3 2\n4 3 2 1\n2 1 4 3\n3 2 1 4\n",
+    "stderr": "",
+    "exit": 0,
+    "signal": null,
+    "timed_out": false,
+    "time_ms": 0,
+    "verdict": "fail",
+    "reasons": [
+     "breaks 6 of 16 clues"
+    ],
+    "notes": [],
+    "grid": [
+     [
+      1,
+      4,
+      3,
+      2
+     ],
+     [
+      4,
+      3,
+      2,
+      1
+     ],
+     [
+      2,
+      1,
+      4,
+      3
+     ],
+     [
+      3,
+      2,
+      1,
+      4
+     ]
+    ],
+    "broken": [
+     {
+      "side": "top",
+      "index": 3,
+      "want": 2,
+      "seen": 3
+     },
+     {
+      "side": "bottom",
+      "index": 0,
+      "want": 3,
+      "seen": 2
+     },
+     {
+      "side": "bottom",
+      "index": 1,
+      "want": 4,
+      "seen": 3
+     },
+     {
+      "side": "left",
+      "index": 3,
+      "want": 3,
+      "seen": 2
+     },
+     {
+      "side": "right",
+      "index": 0,
+      "want": 2,
+      "seen": 3
+     },
+     {
+      "side": "right",
+      "index": 1,
+      "want": 3,
+      "seen": 4
+     }
+    ]
+   },
+   {
+    "id": "ok4-03",
+    "group": "ok4",
+    "argv": [
+     "2 2 4 1 3 2 1 3 2 1 2 3 1 2 3 2"
+    ],
+    "expect": "grid",
+    "stdout": "3 4 2 1\n2 1 4 3\n1 2 3 4\n4 3 1 2\n",
+    "stderr": "",
+    "exit": 0,
+    "signal": null,
+    "timed_out": false,
+    "time_ms": 0,
+    "verdict": "fail",
+    "reasons": [
+     "breaks 12 of 16 clues"
+    ],
+    "notes": [],
+    "grid": [
+     [
+      3,
+      4,
+      2,
+      1
+     ],
+     [
+      2,
+      1,
+      4,
+      3
+     ],
+     [
+      1,
+      2,
+      3,
+      4
+     ],
+     [
+      4,
+      3,
+      1,
+      2
+     ]
+    ],
+    "broken": [
+     {
+      "side": "top",
+      "index": 1,
+      "want": 2,
+      "seen": 1
+     },
+     {
+      "side": "top",
+      "index": 2,
+      "want": 4,
+      "seen": 2
+     },
+     {
+      "side": "top",
+      "index": 3,
+      "want": 1,
+      "seen": 3
+     },
+     {
+      "side": "bottom",
+      "index": 0,
+      "want": 3,
+      "seen": 1
+     },
+     {
+      "side": "bottom",
+      "index": 2,
+      "want": 1,
+      "seen": 3
+     },
+     {
+      "side": "bottom",
+      "index": 3,
+      "want": 3,
+      "seen": 2
+     },
+     {
+      "side": "left",
+      "index": 1,
+      "want": 1,
+      "seen": 2
+     },
+     {
+      "side": "left",
+      "index": 2,
+      "want": 2,
+      "seen": 4
+     },
+     {
+      "side": "left",
+      "index": 3,
+      "want": 3,
+      "seen": 1
+     },
+     {
+      "side": "right",
+      "index": 0,
+      "want": 1,
+      "seen": 3
+     },
+     {
+      "side": "right",
+      "index": 2,
+      "want": 3,
+      "seen": 1
+     },
+     {
+      "side": "right",
+      "index": 3,
+      "want": 2,
+      "seen": 3
+     }
+    ]
+   },
+   {
+    "id": "ok4-04",
+    "group": "ok4",
+    "argv": [
+     "3 2 1 2 1 2 3 2 3 2 3 1 2 3 1 2"
+    ],
+    "expect": "grid",
+    "stdout": "1 3 2 4\n3 4 1 2\n4 2 3 1\n2 1 4 3\n",
+    "stderr": "",
+    "exit": 0,
+    "signal": null,
+    "timed_out": false,
+    "time_ms": 1,
+    "verdict": "fail",
+    "reasons": [
+     "breaks 10 of 16 clues"
+    ],
+    "notes": [],
+    "grid": [
+     [
+      1,
+      3,
+      2,
+      4
+     ],
+     [
+      3,
+      4,
+      1,
+      2
+     ],
+     [
+      4,
+      2,
+      3,
+      1
+     ],
+     [
+      2,
+      1,
+      4,
+      3
+     ]
+    ],
+    "broken": [
+     {
+      "side": "top",
+      "index": 2,
+      "want": 1,
+      "seen": 3
+     },
+     {
+      "side": "top",
+      "index": 3,
+      "want": 2,
+      "seen": 1
+     },
+     {
+      "side": "bottom",
+      "index": 0,
+      "want": 1,
+      "seen": 2
+     },
+     {
+      "side": "bottom",
+      "index": 1,
+      "want": 2,
+      "seen": 3
+     },
+     {
+      "side": "bottom",
+      "index": 2,
+      "want": 3,
+      "seen": 1
+     },
+     {
+      "side": "left",
+      "index": 2,
+      "want": 3,
+      "seen": 1
+     },
+     {
+      "side": "left",
+      "index": 3,
+      "want": 1,
+      "seen": 2
+     },
+     {
+      "side": "right",
+      "index": 0,
+      "want": 2,
+      "seen": 1
+     },
+     {
+      "side": "right",
+      "index": 1,
+      "want": 3,
+      "seen": 2
+     },
+     {
+      "side": "right",
+      "index": 2,
+      "want": 1,
+      "seen": 3
+     }
+    ]
+   },
+   {
+    "id": "ok4-05",
+    "group": "ok4",
+    "argv": [
+     "2 1 3 2 2 3 1 2 2 4 1 2 3 1 3 2"
+    ],
+    "expect": "grid",
+    "stdout": "3 1 4 2\n4 2 3 1\n2 3 1 4\n1 4 2 3\n",
+    "stderr": "",
+    "exit": 0,
+    "signal": null,
+    "timed_out": false,
+    "time_ms": 0,
+    "verdict": "fail",
+    "reasons": [
+     "breaks 10 of 16 clues"
+    ],
+    "notes": [],
+    "grid": [
+     [
+      3,
+      1,
+      4,
+      2
+     ],
+     [
+      4,
+      2,
+      3,
+      1
+     ],
+     [
+      2,
+      3,
+      1,
+      4
+     ],
+     [
+      1,
+      4,
+      2,
+      3
+     ]
+    ],
+    "broken": [
+     {
+      "side": "top",
+      "index": 1,
+      "want": 1,
+      "seen": 4
+     },
+     {
+      "side": "top",
+      "index": 2,
+      "want": 3,
+      "seen": 1
+     },
+     {
+      "side": "bottom",
+      "index": 0,
+      "want": 2,
+      "seen": 3
+     },
+     {
+      "side": "bottom",
+      "index": 1,
+      "want": 3,
+      "seen": 1
+     },
+     {
+      "side": "bottom",
+      "index": 2,
+      "want": 1,
+      "seen": 3
+     },
+     {
+      "side": "left",
+      "index": 1,
+      "want": 4,
+      "seen": 1
+     },
+     {
+      "side": "left",
+      "index": 2,
+      "want": 1,
+      "seen": 3
+     },
+     {
+      "side": "right",
+      "index": 0,
+      "want": 3,
+      "seen": 2
+     },
+     {
+      "side": "right",
+      "index": 1,
+      "want": 1,
+      "seen": 3
+     },
+     {
+      "side": "right",
+      "index": 2,
+      "want": 3,
+      "seen": 1
+     }
+    ]
+   },
+   {
+    "id": "ok4-06",
+    "group": "ok4",
+    "argv": [
+     "2 2 3 1 2 2 1 3 3 2 1 2 1 3 2 2"
+    ],
+    "expect": "grid",
+    "stdout": "2 1 4 3\n3 4 1 2\n1 3 2 4\n4 2 3 1\n",
+    "stderr": "",
+    "exit": 0,
+    "signal": null,
+    "timed_out": false,
+    "time_ms": 0,
+    "verdict": "fail",
+    "reasons": [
+     "breaks 14 of 16 clues"
+    ],
+    "notes": [],
+    "grid": [
+     [
+      2,
+      1,
+      4,
+      3
+     ],
+     [
+      3,
+      4,
+      1,
+      2
+     ],
+     [
+      1,
+      3,
+      2,
+      4
+     ],
+     [
+      4,
+      2,
+      3,
+      1
+     ]
+    ],
+    "broken": [
+     {
+      "side": "top",
+      "index": 0,
+      "want": 2,
+      "seen": 3
+     },
+     {
+      "side": "top",
+      "index": 2,
+      "want": 3,
+      "seen": 1
+     },
+     {
+      "side": "top",
+      "index": 3,
+      "want": 1,
+      "seen": 2
+     },
+     {
+      "side": "bottom",
+      "index": 0,
+      "want": 2,
+      "seen": 1
+     },
+     {
+      "side": "bottom",
+      "index": 1,
+      "want": 2,
+      "seen": 3
+     },
+     {
+      "side": "bottom",
+      "index": 2,
+      "want": 1,
+      "seen": 2
+     },
+     {
+      "side": "bottom",
+      "index": 3,
+      "want": 3,
+      "seen": 2
+     },
+     {
+      "side": "left",
+      "index": 0,
+      "want": 3,
+      "seen": 2
+     },
+     {
+      "side": "left",
+      "index": 2,
+      "want": 1,
+      "seen": 3
+     },
+     {
+      "side": "left",
+      "index": 3,
+      "want": 2,
+      "seen": 1
+     },
+     {
+      "side": "right",
+      "index": 0,
+      "want": 1,
+      "seen": 2
+     },
+     {
+      "side": "right",
+      "index": 1,
+      "want": 3,
+      "seen": 2
+     },
+     {
+      "side": "right",
+      "index": 2,
+      "want": 2,
+      "seen": 1
+     },
+     {
+      "side": "right",
+      "index": 3,
+      "want": 2,
+      "seen": 3
+     }
+    ]
+   },
+   {
+    "id": "multi4-01",
+    "group": "multi4",
+    "argv": [
+     "2 1 2 3 2 3 1 2 2 1 3 2 3 2 1 2"
+    ],
+    "expect": "grid",
+    "stdout": "1 4 2 3\n4 1 3 2\n3 2 1 4\n2 3 4 1\n",
+    "stderr": "",
+    "exit": 0,
+    "signal": null,
+    "timed_out": false,
+    "time_ms": 0,
+    "verdict": "fail",
+    "reasons": [
+     "breaks 8 of 16 clues"
+    ],
+    "notes": [],
+    "grid": [
+     [
+      1,
+      4,
+      2,
+      3
+     ],
+     [
+      4,
+      1,
+      3,
+      2
+     ],
+     [
+      3,
+      2,
+      1,
+      4
+     ],
+     [
+      2,
+      3,
+      4,
+      1
+     ]
+    ],
+    "broken": [
+     {
+      "side": "top",
+      "index": 2,
+      "want": 2,
+      "seen": 3
+     },
+     {
+      "side": "top",
+      "index": 3,
+      "want": 3,
+      "seen": 2
+     },
+     {
+      "side": "bottom",
+      "index": 0,
+      "want": 2,
+      "seen": 3
+     },
+     {
+      "side": "bottom",
+      "index": 1,
+      "want": 3,
+      "seen": 2
+     },
+     {
+      "side": "left",
+      "index": 2,
+      "want": 3,
+      "seen": 2
+     },
+     {
+      "side": "left",
+      "index": 3,
+      "want": 2,
+      "seen": 3
+     },
+     {
+      "side": "right",
+      "index": 0,
+      "want": 3,
+      "seen": 2
+     },
+     {
+      "side": "right",
+      "index": 1,
+      "want": 2,
+      "seen": 3
+     }
+    ]
+   },
+   {
+    "id": "nosol4-easy-01",
+    "group": "nosol4-easy",
+    "argv": [
+     "1 2 2 2 1 2 2 2 4 3 2 1 1 2 2 2"
+    ],
+    "expect": "error",
+    "stdout": "Error\n",
+    "stderr": "",
+    "exit": 1,
+    "signal": null,
+    "timed_out": false,
+    "time_ms": 0,
+    "verdict": "pass",
+    "reasons": [],
+    "notes": [],
+    "grid": null,
+    "broken": []
+   },
+   {
+    "id": "nosol4-deep-01",
+    "group": "nosol4-deep",
+    "argv": [
+     "3 2 1 2 1 2 2 1 1 2 1 3 2 1 4 2"
+    ],
+    "expect": "error",
+    "stdout": "Error\n",
+    "stderr": "",
+    "exit": 1,
+    "signal": null,
+    "timed_out": false,
+    "time_ms": 1,
+    "verdict": "pass",
+    "reasons": [],
+    "notes": [],
+    "grid": null,
+    "broken": []
+   },
+   {
+    "id": "slow4-01",
+    "group": "slow4",
+    "argv": [
+     "3 2 1 2 2 3 3 1 3 2 1 2 2 3 3 1"
+    ],
+    "expect": "grid",
+    "stdout": "1 2 4 3\n2 4 3 1\n4 3 1 2\n3 1 2 4\n",
+    "stderr": "",
+    "exit": 0,
+    "signal": null,
+    "timed_out": false,
+    "time_ms": 0,
+    "verdict": "pass",
+    "reasons": [],
+    "notes": [],
+    "grid": [
+     [
+      1,
+      2,
+      4,
+      3
+     ],
+     [
+      2,
+      4,
+      3,
+      1
+     ],
+     [
+      4,
+      3,
+      1,
+      2
+     ],
+     [
+      3,
+      1,
+      2,
+      4
+     ]
+    ],
+    "broken": []
+   },
+   {
+    "id": "fmt-01",
+    "group": "fmt",
+    "argv": [
+     ""
+    ],
+    "expect": "error",
+    "stdout": "Error\n",
+    "stderr": "",
+    "exit": 1,
+    "signal": null,
+    "timed_out": false,
+    "time_ms": 0,
+    "verdict": "pass",
+    "reasons": [],
+    "notes": [],
+    "grid": null,
+    "broken": []
+   },
+   {
+    "id": "fmt-02",
+    "group": "fmt",
+    "argv": [
+     "4 3"
+    ],
+    "expect": "error",
+    "stdout": "Error\n",
+    "stderr": "",
+    "exit": 1,
+    "signal": null,
+    "timed_out": false,
+    "time_ms": 0,
+    "verdict": "pass",
+    "reasons": [],
+    "notes": [],
+    "grid": null,
+    "broken": []
+   },
+   {
+    "id": "fmt-03",
+    "group": "fmt",
+    "argv": [
+     "4 3 2 1 1 2 2 2 4 3 2 1 1 2 2 2 "
+    ],
+    "expect": "error",
+    "stdout": "1 2 3 4\n2 3 4 1\n3 4 1 2\n4 1 2 3\n",
+    "stderr": "",
+    "exit": 0,
+    "signal": null,
+    "timed_out": false,
+    "time_ms": 0,
+    "verdict": "fail",
+    "reasons": [
+     "expected Error, got a grid"
+    ],
+    "notes": [],
+    "grid": null,
+    "broken": []
+   },
+   {
+    "id": "fmt-04",
+    "group": "fmt",
+    "argv": [
+     "4  3 2 1 1 2 2 2 4 3 2 1 1 2 2 2"
+    ],
+    "expect": "error",
+    "stdout": "1 2 3 4\n2 3 4 1\n3 4 1 2\n4 1 2 3\n",
+    "stderr": "",
+    "exit": 0,
+    "signal": null,
+    "timed_out": false,
+    "time_ms": 0,
+    "verdict": "fail",
+    "reasons": [
+     "expected Error, got a grid"
+    ],
+    "notes": [],
+    "grid": null,
+    "broken": []
+   },
+   {
+    "id": "fmt-05",
+    "group": "fmt",
+    "argv": [
+     "4 3 2 1 1 2 2 2 4 3 2 1 1 2 2 5"
+    ],
+    "expect": "error",
+    "stdout": "Error\n",
+    "stderr": "",
+    "exit": 1,
+    "signal": null,
+    "timed_out": false,
+    "time_ms": 0,
+    "verdict": "pass",
+    "reasons": [],
+    "notes": [],
+    "grid": null,
+    "broken": []
+   },
+   {
+    "id": "fmt-06",
+    "group": "fmt",
+    "argv": [
+     "a 3 2 1 1 2 2 2 4 3 2 1 1 2 2 2"
+    ],
+    "expect": "error",
+    "stdout": "Error\n",
+    "stderr": "",
+    "exit": 1,
+    "signal": null,
+    "timed_out": false,
+    "time_ms": 0,
+    "verdict": "pass",
+    "reasons": [],
+    "notes": [],
+    "grid": null,
+    "broken": []
+   },
+   {
+    "id": "fmt-07",
+    "group": "fmt",
+    "argv": [],
+    "expect": "error",
+    "stdout": "Error\n",
+    "stderr": "",
+    "exit": 1,
+    "signal": null,
+    "timed_out": false,
+    "time_ms": 0,
+    "verdict": "pass",
+    "reasons": [],
+    "notes": [],
+    "grid": null,
+    "broken": []
+   },
+   {
+    "id": "fmt-08",
+    "group": "fmt",
+    "argv": [
+     "4 3 2 1 1 2 2 2 4 3 2 1 1 2 2 2",
+     "4 3 2 1 1 2 2 2 4 3 2 1 1 2 2 2"
+    ],
+    "expect": "error",
+    "stdout": "Error\n",
+    "stderr": "",
+    "exit": 1,
+    "signal": null,
+    "timed_out": false,
+    "time_ms": 0,
+    "verdict": "pass",
+    "reasons": [],
+    "notes": [],
+    "grid": null,
+    "broken": []
+   },
+   {
+    "id": "bonusN-01",
+    "group": "bonusN",
+    "argv": [
+     "2 4 1 3 3 3 2 3 1 2 2 1 3 2 3 3 3 1 4 2"
+    ],
+    "expect": "grid",
+    "stdout": "4 5 2 3 1\n1 2 4 5 3\n5 1 3 4 2\n3 4 1 2 5\n2 3 5 1 4\n",
+    "stderr": "",
+    "exit": 0,
+    "signal": null,
+    "timed_out": false,
+    "time_ms": 1,
+    "verdict": "fail",
+    "reasons": [
+     "breaks 12 of 20 clues"
+    ],
+    "notes": [],
+    "grid": [
+     [
+      4,
+      5,
+      2,
+      3,
+      1
+     ],
+     [
+      1,
+      2,
+      4,
+      5,
+      3
+     ],
+     [
+      5,
+      1,
+      3,
+      4,
+      2
+     ],
+     [
+      3,
+      4,
+      1,
+      2,
+      5
+     ],
+     [
+      2,
+      3,
+      5,
+      1,
+      4
+     ]
+    ],
+    "broken": [
+     {
+      "side": "top",
+      "index": 1,
+      "want": 4,
+      "seen": 1
+     },
+     {
+      "side": "top",
+      "index": 2,
+      "want": 1,
+      "seen": 3
+     },
+     {
+      "side": "top",
+      "index": 3,
+      "want": 3,
+      "seen": 2
+     },
+     {
+      "side": "bottom",
+      "index": 1,
+      "want": 2,
+      "seen": 3
+     },
+     {
+      "side": "bottom",
+      "index": 2,
+      "want": 3,
+      "seen": 1
+     },
+     {
+      "side": "bottom",
+      "index": 3,
+      "want": 1,
+      "seen": 4
+     },
+     {
+      "side": "left",
+      "index": 1,
+      "want": 1,
+      "seen": 4
+     },
+     {
+      "side": "left",
+      "index": 2,
+      "want": 3,
+      "seen": 1
+     },
+     {
+      "side": "left",
+      "index": 3,
+      "want": 2,
+      "seen": 3
+     },
+     {
+      "side": "right",
+      "index": 1,
+      "want": 3,
+      "seen": 2
+     },
+     {
+      "side": "right",
+      "index": 2,
+      "want": 1,
+      "seen": 3
+     },
+     {
+      "side": "right",
+      "index": 3,
+      "want": 4,
+      "seen": 1
+     }
+    ]
+   },
+   {
+    "id": "bonusN-02",
+    "group": "bonusN",
+    "argv": [
+     "4 4 1 2 3 3 4 5 2 4 3 3 3 3 2 5 1 2 3 5 3 3 5 1 2 4 5 6 1 5 4 3 4 4 4 2"
+    ],
+    "expect": "grid",
+    "stdout": "",
+    "stderr": "",
+    "exit": null,
+    "signal": null,
+    "timed_out": true,
+    "time_ms": 10005,
+    "verdict": "fail",
+    "reasons": [
+     "timeout after 10 s"
+    ],
+    "notes": [],
+    "grid": null,
+    "broken": []
+   },
+   {
+    "id": "bonusN-03",
+    "group": "bonusN",
+    "argv": [
+     "9 5 5 3 5 3 3 2 1 1 2 2 3 2 4 3 4 2 9 5 5 3 5 3 3 2 1 1 2 3 3 3 3 4 4 2"
+    ],
+    "expect": "grid",
+    "stdout": "1 2 3 4 5 6 7 8 9\n2 1 4 3 6 5 8 9 7\n3 4 1 2 7 8 9 5 6\n4 3 2 1 8 9 6 7 5\n5 6 7 8 9 1 2 3 4\n6 5 8 9 1 7 3 4 2\n7 8 9 5 2 3 4 6 1\n8 9 6 7 4 2 5 1 3\n9 7 5 6 3 4 1 2 8\n",
+    "stderr": "",
+    "exit": 0,
+    "signal": null,
+    "timed_out": false,
+    "time_ms": 1,
+    "verdict": "fail",
+    "reasons": [
+     "breaks 8 of 36 clues"
+    ],
+    "notes": [],
+    "grid": [
+     [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+     ],
+     [
+      2,
+      1,
+      4,
+      3,
+      6,
+      5,
+      8,
+      9,
+      7
+     ],
+     [
+      3,
+      4,
+      1,
+      2,
+      7,
+      8,
+      9,
+      5,
+      6
+     ],
+     [
+      4,
+      3,
+      2,
+      1,
+      8,
+      9,
+      6,
+      7,
+      5
+     ],
+     [
+      5,
+      6,
+      7,
+      8,
+      9,
+      1,
+      2,
+      3,
+      4
+     ],
+     [
+      6,
+      5,
+      8,
+      9,
+      1,
+      7,
+      3,
+      4,
+      2
+     ],
+     [
+      7,
+      8,
+      9,
+      5,
+      2,
+      3,
+      4,
+      6,
+      1
+     ],
+     [
+      8,
+      9,
+      6,
+      7,
+      4,
+      2,
+      5,
+      1,
+      3
+     ],
+     [
+      9,
+      7,
+      5,
+      6,
+      3,
+      4,
+      1,
+      2,
+      8
+     ]
+    ],
+    "broken": [
+     {
+      "side": "bottom",
+      "index": 2,
+      "want": 2,
+      "seen": 3
+     },
+     {
+      "side": "bottom",
+      "index": 4,
+      "want": 2,
+      "seen": 3
+     },
+     {
+      "side": "bottom",
+      "index": 5,
+      "want": 4,
+      "seen": 3
+     },
+     {
+      "side": "bottom",
+      "index": 6,
+      "want": 3,
+      "seen": 4
+     },
+     {
+      "side": "right",
+      "index": 2,
+      "want": 3,
+      "seen": 2
+     },
+     {
+      "side": "right",
+      "index": 4,
+      "want": 3,
+      "seen": 2
+     },
+     {
+      "side": "right",
+      "index": 5,
+      "want": 3,
+      "seen": 4
+     },
+     {
+      "side": "right",
+      "index": 6,
+      "want": 4,
+      "seen": 3
+     }
+    ]
+   },
+   {
+    "id": "bonusN-04",
+    "group": "bonusN",
+    "argv": [
+     "2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2"
+    ],
+    "expect": "error",
+    "stdout": "Error\n",
+    "stderr": "",
+    "exit": 1,
+    "signal": null,
+    "timed_out": false,
+    "time_ms": 0,
+    "verdict": "pass",
+    "reasons": [],
+    "notes": [],
+    "grid": null,
+    "broken": []
+   },
+   {
+    "id": "small-01",
+    "group": "small",
+    "argv": [
+     "1 1 1 1"
+    ],
+    "expect": "info",
+    "stdout": "1\n",
+    "stderr": "",
+    "exit": 0,
+    "signal": null,
+    "timed_out": false,
+    "time_ms": 0,
+    "verdict": "info",
+    "reasons": [],
+    "notes": [],
+    "grid": [
+     [
+      1
+     ]
+    ],
+    "broken": []
+   },
+   {
+    "id": "small-02",
+    "group": "small",
+    "argv": [
+     "2 1 1 2 2 1 1 2"
+    ],
+    "expect": "info",
+    "stdout": "1 2\n2 1\n",
+    "stderr": "",
+    "exit": 0,
+    "signal": null,
+    "timed_out": false,
+    "time_ms": 1,
+    "verdict": "info",
+    "reasons": [],
+    "notes": [],
+    "grid": [
+     [
+      1,
+      2
+     ],
+     [
+      2,
+      1
+     ]
+    ],
+    "broken": []
+   }
+  ],
+  "groups": {
+   "ok4": {
+    "pass": 1,
+    "fail": 5,
+    "info": 0
+   },
+   "multi4": {
+    "pass": 0,
+    "fail": 1,
+    "info": 0
+   },
+   "nosol4-easy": {
+    "pass": 1,
+    "fail": 0,
+    "info": 0
+   },
+   "nosol4-deep": {
+    "pass": 1,
+    "fail": 0,
+    "info": 0
+   },
+   "slow4": {
+    "pass": 1,
+    "fail": 0,
+    "info": 0
+   },
+   "fmt": {
+    "pass": 6,
+    "fail": 2,
+    "info": 0
+   },
+   "bonusN": {
+    "pass": 1,
+    "fail": 3,
+    "info": 0
+   },
+   "small": {
+    "pass": 0,
+    "fail": 0,
+    "info": 2
+   }
+  },
+  "timing": {
+   "slowest_id": "bonusN-02",
+   "slowest_ms": 10005,
+   "slow4_over_ok4": 0.0
+  },
+  "diagnosis": {
+   "best": {
+    "id": "transposed",
+    "text": "rows and columns swapped (transposed)",
+    "explains": 8,
+    "failures": 8,
+    "contradicted": 0
+   },
+   "all": [
+    {
+     "id": "transposed",
+     "text": "rows and columns swapped (transposed)",
+     "explains": 8,
+     "failures": 8,
+     "contradicted": 0
+    },
+    {
+     "id": "top_bottom",
+     "text": "top and bottom clues swapped",
+     "explains": 0,
+     "failures": 8,
+     "contradicted": 8
+    },
+    {
+     "id": "left_right",
+     "text": "left and right clues swapped",
+     "explains": 0,
+     "failures": 8,
+     "contradicted": 8
+    }
+   ],
+   "extra": []
+  },
+  "tools": {
+   "cc": true,
+   "norminette": true,
+   "valgrind": true,
+   "asan": true
+  },
+  "stops": [
+   {
+    "key": "norm",
+    "level": "stop",
+    "text": "4 norm error(s)",
+    "sheet": "Norm error: evaluation stops."
+   }
+  ],
+  "bonus": {
+   "sizes": {
+    "5": "fail"
+   },
+   "largest_n": null,
+   "counted": false,
+   "note": "not counted: the evaluation stops (norm)"
+  },
+  "malloc_fail": {
+   "ran": false,
+   "mallocs": null,
+   "tries": [],
+   "crashes": [],
+   "note": "the source never calls malloc: nothing to break"
+  }
+ },
+ "detect": {
+  "parts": {
+   "parse": {
+    "id": "parse.scan",
+    "name": "Scan and count",
+    "tier": null,
+    "confidence": "clear",
+    "also": [],
+    "where": [
+     {
+      "file": "ex00/main.c",
+      "func": "parse_clues",
+      "line": 3
+     }
+    ],
+    "evidence": [
+     {
+      "file": "ex00/main.c",
+      "line": 12,
+      "text": "if (str[i] >= '1' && str[i] <= '9')",
+      "why": "a digit is stored, one pass over the string"
+     },
+     {
+      "file": "ex00/main.c",
+      "line": 19,
+      "text": "else if (str[i] != ' ')",
+      "why": "spaces are skipped, anything else is an error"
+     },
+     {
+      "file": "ex00/main.c",
+      "line": 24,
+      "text": "return (count % 4 == 0 && *n >= 1);",
+      "why": "N comes from the count of numbers"
+     }
+    ],
+    "facts": [
+     {
+      "key": "argc",
+      "text": "checks argc != 2"
+     },
+     {
+      "key": "n",
+      "text": "N from the count (bonus sizes)"
+     },
+     {
+      "key": "spaces",
+      "text": "any number of spaces accepted"
+     }
+    ],
+    "explain": "Walks the argument once: a digit is stored and counted, a space is skipped. The count decides if it is valid.",
+    "questions": [
+     "What does your program do with two spaces in a row?",
+     "Where do you check that a clue is not bigger than N?"
+    ]
+   },
+   "data": {
+    "id": "data.grid2d",
+    "name": "2D array",
+    "tier": null,
+    "confidence": "likely",
+    "also": [],
+    "where": [
+     {
+      "file": "ex00/main.c",
+      "func": "main",
+      "line": 39
+     }
+    ],
+    "evidence": [
+     {
+      "file": "ex00/main.c",
+      "line": 42,
+      "text": "int grid[9][9];",
+      "why": "a fixed 2D array, sized for the 9x9 bonus"
+     },
+     {
+      "file": "ex00/solve.c",
+      "line": 81,
+      "text": "grid[pos / n][pos % n] = v;",
+      "why": "indexed [row][col] through pos / n, pos % n"
+     },
+     {
+      "file": "ex00/main.c",
+      "line": 41,
+      "text": "int clues[36];",
+      "why": "the clues stay flat, in input order"
+     }
+    ],
+    "facts": [
+     {
+      "key": "clues",
+      "text": "clues flat [36]: top 0..n-1, bottom n.., left 2n.., right 3n.."
+     },
+     {
+      "key": "globals",
+      "text": "no globals: passed as arguments"
+     }
+    ],
+    "explain": "The board is an int[9][9]; only the top-left n x n part is used.",
+    "questions": [
+     "Why is the grid 9 by 9 when the puzzle is 4 by 4?"
+    ]
+   },
+   "solve": {
+    "id": "solve.bt_clue_line",
+    "name": "Backtracking + clue check when a line is full",
+    "tier": 1,
+    "confidence": "clear",
+    "also": [],
+    "where": [
+     {
+      "file": "ex00/solve.c",
+      "func": "solve",
+      "line": 70
+     }
+    ],
+    "evidence": [
+     {
+      "file": "ex00/solve.c",
+      "line": 79,
+      "text": "if (!fits(grid, n, pos, v))",
+      "why": "row and column uniqueness before placing"
+     },
+     {
+      "file": "ex00/solve.c",
+      "line": 82,
+      "text": "if ((pos % n != n - 1 || row_ok(grid, clues, n, pos / n))",
+      "why": "row clues checked when the row is full"
+     },
+     {
+      "file": "ex00/solve.c",
+      "line": 83,
+      "text": "&& (pos / n != n - 1 || col_ok(grid, clues, n, pos % n))",
+      "why": "column clues checked when the column is full"
+     },
+     {
+      "file": "ex00/solve.c",
+      "line": 86,
+      "text": "grid[pos / n][pos % n] = 0;",
+      "why": "resets the cell after a failed try"
+     }
+    ],
+    "facts": [
+     {
+      "key": "line_check",
+      "text": "row-end and col-end"
+     },
+     {
+      "key": "counter",
+      "text": "count++ when a block is taller than max (max = 0)"
+     },
+     {
+      "key": "no_solution",
+      "text": "prints Error when solve returns 0"
+     }
+    ],
+    "explain": "Fills the cells in order, tries 1..N, keeps a value only if its row and column stay unique, and checks the clues of a line as soon as that line is full.",
+    "questions": [
+     "When exactly do you check the clues of a row?",
+     "What does solve return when no value fits?",
+     "Which clue does row_ok compare row 0 with?"
+    ]
+   },
+   "print": {
+    "id": "print.char",
+    "name": "One write per char",
+    "tier": null,
+    "confidence": "clear",
+    "also": [],
+    "where": [
+     {
+      "file": "ex00/print.c",
+      "func": "print_grid",
+      "line": 8
+     }
+    ],
+    "evidence": [
+     {
+      "file": "ex00/print.c",
+      "line": 5,
+      "text": "write(1, &c, 1);",
+      "why": "one byte per write"
+     },
+     {
+      "file": "ex00/print.c",
+      "line": 19,
+      "text": "ft_putchar(grid[r][c] + '0');",
+      "why": "a digit becomes a char with + '0'"
+     }
+    ],
+    "facts": [
+     {
+      "key": "error_fd",
+      "text": "Error on fd 1"
+     },
+     {
+      "key": "spaces",
+      "text": "no trailing space (c < n - 1)"
+     }
+    ],
+    "explain": "Writes each digit and each space with its own write call.",
+    "questions": [
+     "How many write calls print a 4x4 grid?"
+    ]
+   }
+  },
+  "project": {
+   "globals": [],
+   "structs": [],
+   "functions": 10,
+   "longest": {
+    "name": "parse_clues",
+    "file": "ex00/main.c",
+    "lines": 22
+   },
+   "never_freed": false,
+   "bonus": true,
+   "authors": null,
+   "commits": null,
+   "ask": [
+    {
+     "kind": "complex",
+     "file": "ex00/solve.c",
+     "line": 82,
+     "text": "if ((pos % n != n - 1 || row_ok(grid, clues, n, pos / n))",
+     "why": "13 operators, 3 lines: ask what this does"
+    },
+    {
+     "kind": "recursion",
+     "file": "ex00/solve.c",
+     "line": 70,
+     "text": "int\tsolve(int grid[9][9], int *clues, int n, int pos)",
+     "why": "recursive: solve() calls itself. Returns: `return (1)` (line 75); `return (1)` (line 85); `return (0)` (line 88). Ask what it returns when the grid is full, and when the grid is impossible"
+    }
+   ]
+  },
+  "error": null
+ },
+ "cross_check": []
+}

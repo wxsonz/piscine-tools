@@ -1,0 +1,12 @@
+parse = parse.split
+data = data.malloc2d
+solve = solve.bt_clue_line
+print = print.board
+built = yes
+ex_dir = yes
+forbidden = none
+group.ok4 = pass
+group.fmt = pass
+group.nosol4-easy = pass
+sanitizer = clean
+diagnosis = none

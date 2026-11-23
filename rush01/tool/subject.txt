@@ -1,0 +1,12 @@
+# rush01 subject settings (PLAN.md §3). key = value, one per line.
+name = rush01
+turn_in_dir = ex00
+binary = rush01
+build = cc -Wall -Wextra -Werror -o rush01
+sizes = 4
+bonus_sizes = 5 6 7 8 9
+allowed = write malloc free
+error_text = Error\n
+error_on_stderr = note
+norm_flags = -R CheckForbiddenSourceHeader
+sheet_binary = rush-01   # what the eval sheet runs; the subject's name wins

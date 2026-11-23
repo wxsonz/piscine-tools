@@ -1,0 +1,13 @@
+# c11: also handles N 5..9 (not claimed here)
+parse = parse.atoi
+data = data.malloc2d
+solve = solve.bt_clue_line
+print = print.line
+built = yes
+ex_dir = yes
+forbidden = none
+group.ok4 = pass
+group.fmt = pass
+group.nosol4-easy = pass
+sanitizer = clean
+diagnosis = none

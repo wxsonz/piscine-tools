@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rush01 · approach library</title>
+<link rel="stylesheet" href="/www/notebook.css">
+<link rel="stylesheet" href="/www/rush01.css">
+<link rel="stylesheet" href="/www/select.css">
+<link rel="stylesheet" href="/www/game.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="wob" x="-5%" y="-10%" width="110%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="5"/><feDisplacementMap in="SourceGraphic" scale="3"/></filter>
+</defs></svg>
+
+<div class="wrap">
+<header class="band slim tight">
+  <div>
+    <p class="kicker">RUSH 01 · APPROACH LIBRARY</p>
+    <h1>How each approach works</h1>
+    <p class="sub">preset animations for every catalog entry — for learning and defense prep, never a trace of a team's code</p>
+  </div>
+  <span class="sp"></span>
+  <div class="tools">
+    <a class="btn small" href="/">&#8592; dashboard</a>
+    <button class="btn small on" id="mode-browse" type="button">Library</button>
+    <button class="btn small" id="mode-compare" type="button">Compare solvers</button>
+    <button class="btn small themebtn" type="button" title="paper / night page">&#9790;</button>
+  </div>
+</header>
+
+<main>
+  <section id="browse-view" class="lib-grid">
+    <aside class="card r1 lib-nav">
+      <span class="tape l"></span>
+      <div class="lib-head"><h3>Catalog</h3>
+      <input class="lib-find" id="lib-find" type="search" placeholder="filter   ( / )" autocomplete="off" spellcheck="false"></div>
+      <div id="lib-list">Loading catalog…</div>
+    </aside>
+    <div class="card r2 lib-stage">
+      <span class="tape c"></span>
+      <p class="lab" id="lib-part"></p>
+      <h2 id="lib-name">Pick an approach</h2>
+      <p class="explain" id="lib-explain"></p>
+      <div id="lib-demo"></div>
+      <details class="qs" id="lib-qs" open hidden></details>
+    </div>
+  </section>
+
+  <section id="compare-view" class="card r1" hidden>
+    <span class="tape c"></span>
+    <h3>VS: two solving approaches, one puzzle</h3>
+    <p class="demo-preset-tag">How these approaches work (presets), not student code</p>
+    <div class="cmp-bar">
+      <label>Left <select id="cmp-left"></select></label>
+      <label>Right <select id="cmp-right"></select></label>
+      <label>Puzzle <select id="cmp-puzzle"></select></label>
+      <span class="sp"></span>
+      <button class="btn small" id="cmp-reset" type="button">&#8634; reset</button>
+      <button class="btn small go" id="cmp-play" type="button">&#9654; Play both</button>
+      <button class="btn small" id="cmp-step" type="button">&#9654;| step both</button>
+      <button class="btn small" id="cmp-end" type="button">&#9197; end both</button>
+    </div>
+    <p class="diag na" id="cmp-summary"></p>
+    <div class="vs-head" id="vs-head" aria-live="polite"></div>
+    <div class="cmp-panes">
+      <div class="cmp-pane"><h4 id="cmp-left-title"></h4><div id="cmp-left-box"></div></div>
+      <div class="cmp-pane"><h4 id="cmp-right-title"></h4><div id="cmp-right-box"></div></div>
+    </div>
+  </section>
+</main>
+</div>
+<script src="/www/page.js"></script>
+<script src="/www/sky3d.js"></script>
+<script src="/www/demos_gen.js"></script>
+<script src="/www/demos_ui.js"></script>
+<script src="/www/library.js"></script>
+</body></html>

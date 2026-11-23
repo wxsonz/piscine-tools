@@ -1,0 +1,23 @@
+{"argv": [""], "clues": null, "expect": "error", "group": "fmt", "id": "fmt-01", "n": 4, "note": "empty string", "timeout_ms": 2000}
+{"argv": ["1"], "clues": null, "expect": "error", "group": "fmt", "id": "fmt-02", "n": 4, "note": "one number", "timeout_ms": 2000}
+{"argv": ["4 3"], "clues": null, "expect": "error", "group": "fmt", "id": "fmt-03", "n": 4, "note": "two numbers", "timeout_ms": 2000}
+{"argv": ["4 3 2 1 1 2 2 2 4 3 2 1 1 2 2"], "clues": null, "expect": "error", "group": "fmt", "id": "fmt-04", "n": 4, "note": "15 numbers", "timeout_ms": 2000}
+{"argv": ["4 3 2 1 1 2 2 2 4 3 2 1 1 2 2 2 2"], "clues": null, "expect": "error", "group": "fmt", "id": "fmt-05", "n": 4, "note": "17 numbers", "timeout_ms": 2000}
+{"argv": ["4 3 2 1 1 0 2 2 4 3 2 1 1 2 2 2"], "clues": null, "expect": "error", "group": "fmt", "id": "fmt-06", "n": 4, "note": "a 0", "timeout_ms": 2000}
+{"argv": ["4 3 2 1 1 5 2 2 4 3 2 1 1 2 2 2"], "clues": null, "expect": "error", "group": "fmt", "id": "fmt-07", "n": 4, "note": "a 5 (above N = 4)", "timeout_ms": 2000}
+{"argv": ["4 3 2 1 1 / 2 2 4 3 2 1 1 2 2 2"], "clues": null, "expect": "error", "group": "fmt", "id": "fmt-08", "n": 4, "note": "'/' (just below '0')", "timeout_ms": 2000}
+{"argv": ["4 3 2 1 1 : 2 2 4 3 2 1 1 2 2 2"], "clues": null, "expect": "error", "group": "fmt", "id": "fmt-09", "n": 4, "note": "':' (just above '9')", "timeout_ms": 2000}
+{"argv": ["4 3 2 1 1 12 2 2 4 3 2 1 1 2 2 2"], "clues": null, "expect": "error", "group": "fmt", "id": "fmt-10", "n": 4, "note": "a two-digit number 12", "timeout_ms": 2000}
+{"argv": ["4 3 2 1 1 04 2 2 4 3 2 1 1 2 2 2"], "clues": null, "expect": "error", "group": "fmt", "id": "fmt-11", "n": 4, "note": "a leading zero: 04", "timeout_ms": 2000}
+{"argv": ["4 3 2 1 1 a 2 2 4 3 2 1 1 2 2 2"], "clues": null, "expect": "error", "group": "fmt", "id": "fmt-12", "n": 4, "note": "a letter", "timeout_ms": 2000}
+{"argv": ["4  3 2 1 1 2 2 2 4 3 2 1 1 2 2 2"], "clues": null, "expect": "error", "group": "fmt", "id": "fmt-13", "n": 4, "note": "double space", "timeout_ms": 2000}
+{"argv": [" 4 3 2 1 1 2 2 2 4 3 2 1 1 2 2 2"], "clues": null, "expect": "error", "group": "fmt", "id": "fmt-14", "n": 4, "note": "leading space", "timeout_ms": 2000}
+{"argv": ["4 3 2 1 1 2 2 2 4 3 2 1 1 2 2 2 "], "clues": null, "expect": "error", "group": "fmt", "id": "fmt-15", "n": 4, "note": "trailing space", "timeout_ms": 2000}
+{"argv": ["4\t3 2 1 1 2 2 2 4 3 2 1 1 2 2 2"], "clues": null, "expect": "error", "group": "fmt", "id": "fmt-16", "n": 4, "note": "a tab instead of a space", "timeout_ms": 2000}
+{"argv": ["4\u000b3 2 1 1 2 2 2 4 3 2 1 1 2 2 2"], "clues": null, "expect": "error", "group": "fmt", "id": "fmt-17", "n": 4, "note": "a \\v instead of a space", "timeout_ms": 2000}
+{"argv": ["4\n3 2 1 1 2 2 2 4 3 2 1 1 2 2 2"], "clues": null, "expect": "error", "group": "fmt", "id": "fmt-18", "n": 4, "note": "a \\n inside", "timeout_ms": 2000}
+{"argv": ["4 3 2 1 1 2 2 2 4 3 2 1 1 2 2 2\n"], "clues": null, "expect": "error", "group": "fmt", "id": "fmt-19", "n": 4, "note": "trailing \\n", "timeout_ms": 2000}
+{"argv": ["4 3 2 1 1 -1 2 2 4 3 2 1 1 2 2 2"], "clues": null, "expect": "error", "group": "fmt", "id": "fmt-20", "n": 4, "note": "a negative number -1", "timeout_ms": 2000}
+{"argv": ["4 3 2 1 1 +1 2 2 4 3 2 1 1 2 2 2"], "clues": null, "expect": "error", "group": "fmt", "id": "fmt-21", "n": 4, "note": "a plus sign +1", "timeout_ms": 2000}
+{"argv": [], "clues": null, "expect": "error", "group": "fmt", "id": "fmt-22", "n": 4, "note": "no argument", "timeout_ms": 2000}
+{"argv": ["4 3 2 1 1 2 2 2", "4 3 2 1 1 2 2 2"], "clues": null, "expect": "error", "group": "fmt", "id": "fmt-23", "n": 4, "note": "two arguments", "timeout_ms": 2000}

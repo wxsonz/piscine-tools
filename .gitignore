@@ -11,3 +11,7 @@ __pycache__/
 *.pyc
 *.o
 a.out
+
+# The subject PDF (not ours)
+rush01/rush01.pdf
+rush01/Rush01_en.subject.pdf

@@ -1,0 +1,6 @@
+#!/usr/bin/env python3
+"""rush01 CLI launcher: everything is in rush01_wiring.py (the wiring file)."""
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+from rush01_wiring import main
+sys.exit(main(sys.argv[1:]))

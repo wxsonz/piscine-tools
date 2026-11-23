@@ -1,0 +1,10 @@
+# malloc before validation, no free on the error path (leaks on bad input)
+built = yes
+ex_dir = yes
+forbidden = none
+group.ok4 = pass
+group.fmt = pass
+group.nosol4-easy = pass
+diagnosis = none
+sanitizer = finding
+norm = ok

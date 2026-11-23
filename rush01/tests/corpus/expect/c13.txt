@@ -1,0 +1,12 @@
+parse = parse.scan
+data = data.grid2d
+solve = solve.bt_unique
+print = print.char
+built = yes
+ex_dir = yes
+forbidden = none
+group.ok4 = pass
+group.fmt = pass
+group.nosol4-easy = pass
+sanitizer = clean
+diagnosis = none

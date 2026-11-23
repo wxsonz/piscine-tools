@@ -1,0 +1,113 @@
+/* select.css: the team select (dashboard list view, search, filters) and the
+   library's catalog that stays on screen. Colours only through notebook.css's
+   variables, so the night page follows them (OWNED.md). */
+
+/* ---- the bar over the teams: search, filters, view ----------------------- */
+.pickbar{position:sticky;top:0;z-index:6;display:flex;flex-wrap:wrap;gap:10px 12px;align-items:center;
+  margin:6px -12px 0;padding:10px 12px;background:var(--page);border-bottom:3px dashed var(--rule)}
+.pickbar .sp{flex:1}
+.pickbar input[type=search]{flex:0 1 260px;min-width:160px;font:19px var(--hand);color:var(--text);background:transparent;
+  border:0;border-bottom:3px solid var(--text);padding:0 4px 2px}
+.pickbar input[type=search]:focus{outline:none;border-bottom-color:var(--orange)}
+.pickbar input[type=search]::placeholder{color:var(--body);opacity:.8}
+.filters,.views{display:flex;flex-wrap:wrap;gap:8px}
+.filters .btn i{font-style:normal;opacity:.7;margin-left:2px}
+.pickbar .btn.on{background:var(--ink);color:var(--paper)}
+.pickbar .btn:disabled{opacity:.4}
+.views{gap:0}
+.views .btn{border-radius:0}
+.views .btn:first-child{border-radius:8px 0 0 3px}
+.views .btn:last-child{border-radius:0 3px 8px 0;margin-left:-3px}
+.join{margin-top:16px}
+.nomatch{font-size:20px;color:var(--text);margin:20px 0}
+
+/* ---- list view: one line per team ---------------------------------------- */
+.teams.list{display:flex;flex-direction:column;align-items:stretch;gap:6px;margin-top:10px}
+.trow.thead{flex-basis:100%;min-height:0;padding:0 14px;margin-top:2px;background:transparent;border:0;box-shadow:none;
+  color:var(--text);font:13px var(--marker);letter-spacing:.03em;text-transform:uppercase;opacity:.75}
+.trow.thead:hover{box-shadow:none}
+.trow.thead .r-no{color:inherit}
+.trow.thead .r-flags{justify-content:flex-end}
+.trow{display:grid;align-items:center;gap:12px;padding:4px 12px;min-height:42px;
+  grid-template-columns:30px minmax(110px,170px) 84px 62px 118px minmax(0,1fr) 128px 40px;
+  background:var(--card);color:var(--ink);border:2px solid var(--ink);border-radius:10px 4px 10px 4px;box-shadow:3px 3px 0 var(--ink)}
+.trow:hover{box-shadow:4px 4px 0 var(--teal)}
+.trow .r-no{font:15px var(--mono);color:var(--body);text-align:right}
+.trow .r-name{display:flex;flex-direction:column;min-width:0;color:var(--ink);text-decoration:none}
+.trow .r-name b{font:400 19px/1.05 var(--marker);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trow a.r-name:hover b{text-decoration:underline}
+.trow .r-name small{font-size:13px;line-height:1.1;color:var(--body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trow .r-stamp{font:15px/1.2 var(--marker);text-align:center;padding:2px 6px;border:2px solid currentColor;border-radius:8px 3px 8px 3px;white-space:nowrap}
+.trow .r-stamp.ok{color:var(--teal)}.trow .r-stamp.bad{color:var(--orange-t)}.trow .r-stamp.na{color:var(--body);border-style:dashed}
+.trow .r-el{font:15px var(--marker);white-space:nowrap}
+.trow .r-el.ok{color:var(--teal)}.trow .r-el.bad{color:var(--orange-t)}.trow .r-el.na{color:var(--body)}
+.trow .r-runs{display:flex;align-items:center;gap:8px;font:15px var(--marker);white-space:nowrap}
+.trow .r-runs.ok{color:var(--teal)}.trow .r-runs.bad{color:var(--orange-t)}
+.trow .mini{flex:1;height:12px;border:2px solid var(--ink);border-radius:6px 2px 6px 2px;overflow:hidden;display:flex;background:var(--card)}
+.trow .mini i{display:block;background:var(--teal)}
+.trow .r-runs.bad .mini{background:var(--orange)}
+.trow .r-parts{display:grid;grid-template-columns:1fr 1fr 1.6fr 1fr;gap:6px;min-width:0}
+.trow .r-part{font-size:15px;line-height:1.3;padding:0 6px;border:2px solid var(--ink);border-radius:7px 3px 7px 3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.trow .r-part.c-mix{border-style:double;border-width:3px}
+.trow .r-part.c-unrecognized{border-style:dashed;color:var(--body);font-style:italic}
+.trow .r-flags{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}
+.trow .r-flag{font:13px/1.3 var(--marker);padding:0 6px;border:2px solid var(--ink);border-radius:6px 2px 6px 2px;white-space:nowrap}
+.trow .r-flag.stop{color:var(--orange-t);border-color:var(--orange)}
+.trow .r-flag.check{color:var(--body);border-style:dashed}
+.trow .r-flag.bonus{color:var(--teal);border-color:var(--teal)}
+.trow .r-flag.bonus.off{color:var(--body);border-color:var(--body);border-style:dashed}
+.trow .r-act{text-align:right}
+.trow .r-act .btn{padding:1px 8px}
+@media (max-width:1180px){
+  .trow{grid-template-columns:30px minmax(110px,1fr) 84px 62px 140px 40px}
+  .trow .r-act{grid-column:6;grid-row:1}
+  .trow .r-parts,.trow .r-flags{grid-column:2/-1}
+  .trow .r-flags{justify-content:flex-start}
+  .trow .r-flags:empty{display:none}
+  .trow.thead .r-parts,.trow.thead .r-flags{display:none}
+}
+@media (max-width:640px){
+  .trow{grid-template-columns:24px minmax(0,1fr) auto 40px}
+  .trow .r-act{grid-column:4}
+  .trow .r-el{grid-column:2}
+  .trow .r-runs{grid-column:3/-1}
+  .pickbar{position:static}
+  .trow .r-parts{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .trow.thead{display:none}
+}
+
+/* ---- library: a slimmer header; the whole catalog on screen, no scroll ---- */
+.band.tight{padding:14px 0 4px}
+.band.tight h1{font-size:40px;margin:0 0 2px}
+.band.tight .sub{font-size:17px}
+.band.tight .tools{top:10px}
+.lib-grid{grid-template-columns:minmax(480px,540px) minmax(0,1fr);gap:24px}
+.lib-nav{position:sticky;top:10px;padding:14px 18px 10px}
+.lib-head{display:flex;align-items:baseline;gap:14px;margin-bottom:4px}
+.lib-head h3{margin:0}
+.lib-find{flex:1;min-width:0;font:17px var(--hand);color:var(--ink);background:transparent;border:0;border-bottom:3px solid var(--ink);padding:0 4px 1px}
+.lib-find:focus{outline:none;border-bottom-color:var(--orange)}
+.lib-find::placeholder{color:var(--body)}
+/* two columns: parse, data, print on the left; solve (the longest) on the right */
+#lib-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-flow:dense;gap:0 14px;align-items:start}
+#lib-list details{grid-column:1;margin:3px 0 0}
+#lib-list details[data-part="solve"]{grid-column:2;grid-row:1/span 3}
+#lib-list summary{cursor:pointer;list-style-position:inside}
+#lib-list summary .lab{display:inline;margin:0;font-size:14px}
+#lib-list summary i{font-style:normal}
+.lib-items{gap:1px;margin-top:2px}
+.lib-item{display:flex;gap:6px;align-items:center;padding:0 6px;font:15px/1.2 var(--hand)}
+.lib-item>span:last-child{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lib-item .tier{flex:none;font-size:11px;line-height:1.3;padding:0 5px;border-width:2px}
+.lib-none{grid-column:1/-1;color:var(--body);font-size:17px;margin:10px 0}
+/* not wide enough for list + stage side by side: the list on top, 4 columns */
+@media (max-width:1180px){
+  .lib-grid{grid-template-columns:1fr}
+  .lib-nav{position:static}
+  #lib-list{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+  #lib-list details,#lib-list details[data-part="solve"]{grid-column:auto;grid-row:auto}
+}
+@media (max-width:900px){
+  .band.tight{padding-top:60px}
+}

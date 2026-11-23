@@ -1,0 +1,6 @@
+{"argv": ["3 2 2 1 1 2 2 3 3 2 2 1 1 2 2 3"], "clues": [3, 2, 2, 1, 1, 2, 2, 3, 3, 2, 2, 1, 1, 2, 2, 3], "expect": "grid", "group": "multi4", "id": "multi4-01", "n": 4, "note": "6 solutions", "timeout_ms": 2000}
+{"argv": ["2 3 1 2 2 1 3 2 2 3 1 2 2 1 3 2"], "clues": [2, 3, 1, 2, 2, 1, 3, 2, 2, 3, 1, 2, 2, 1, 3, 2], "expect": "grid", "group": "multi4", "id": "multi4-02", "n": 4, "note": "6 solutions; diagnostic: max starts at 1 with >: one less when a line starts with 1 gives a wrong grid", "timeout_ms": 2000}
+{"argv": ["2 3 2 1 1 2 2 3 2 3 2 1 1 2 2 3"], "clues": [2, 3, 2, 1, 1, 2, 2, 3, 2, 3, 2, 1, 1, 2, 2, 3], "expect": "grid", "group": "multi4", "id": "multi4-03", "n": 4, "note": "2 solutions", "timeout_ms": 2000}
+{"argv": ["2 3 1 2 1 2 3 2 2 3 2 1 2 1 3 2"], "clues": [2, 3, 1, 2, 1, 2, 3, 2, 2, 3, 2, 1, 2, 1, 3, 2], "expect": "grid", "group": "multi4", "id": "multi4-04", "n": 4, "note": "2 solutions", "timeout_ms": 2000}
+{"argv": ["2 4 1 2 2 1 4 2 2 4 1 2 2 1 4 2"], "clues": [2, 4, 1, 2, 2, 1, 4, 2, 2, 4, 1, 2, 2, 1, 4, 2], "expect": "grid", "group": "multi4", "id": "multi4-05", "n": 4, "note": "2 solutions", "timeout_ms": 2000}
+{"argv": ["2 2 1 3 3 1 2 2 3 1 2 2 2 2 1 3"], "clues": [2, 2, 1, 3, 3, 1, 2, 2, 3, 1, 2, 2, 2, 2, 1, 3], "expect": "grid", "group": "multi4", "id": "multi4-06", "n": 4, "note": "4 solutions", "timeout_ms": 2000}

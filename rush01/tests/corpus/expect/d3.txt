@@ -1,0 +1,4 @@
+# unused variable in print.c: -Werror build failure
+built = no
+ex_dir = yes
+norm = ok

@@ -1,0 +1,10 @@
+# trailing space at the end of each line
+built = yes
+ex_dir = yes
+forbidden = none
+group.ok4 = fail
+group.fmt = pass
+group.nosol4-easy = pass
+diagnosis = none
+sanitizer = clean
+norm = ok

@@ -1,0 +1,10 @@
+# printf and atoi are forbidden; everything else is a clean solver
+built = yes
+ex_dir = yes
+forbidden = atoi printf
+group.ok4 = pass
+group.fmt = pass
+group.nosol4-easy = pass
+diagnosis = none
+sanitizer = clean
+norm = ok

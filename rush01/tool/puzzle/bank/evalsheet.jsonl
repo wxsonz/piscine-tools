@@ -1,0 +1,6 @@
+{"argv": ["4 3 2 1 1 2 2 2 4 3 2 1 1 2 2 2 3"], "clues": null, "expect": "error", "group": "evalsheet", "id": "evalsheet-01", "n": 4, "note": "sheet: poorly shaped (17 numbers)", "timeout_ms": 2000}
+{"argv": ["4 3 2 1 1 2 2 2 4 3 2 1 1 2 2"], "clues": null, "expect": "error", "group": "evalsheet", "id": "evalsheet-02", "n": 4, "note": "sheet: poorly shaped (15 numbers)", "timeout_ms": 2000}
+{"argv": ["4 3 2 1 1 2 2 2 6 3 2 1 1 2 2 2"], "clues": null, "expect": "error", "group": "evalsheet", "id": "evalsheet-03", "n": 4, "note": "sheet: poorly shaped (a 6)", "timeout_ms": 2000}
+{"argv": ["4321122243211222"], "clues": null, "expect": "error", "group": "evalsheet", "id": "evalsheet-04", "n": 4, "note": "sheet: poorly shaped (no spaces)", "timeout_ms": 2000}
+{"argv": ["Hello"], "clues": null, "expect": "error", "group": "evalsheet", "id": "evalsheet-05", "n": 4, "note": "sheet: poorly shaped (Hello)", "timeout_ms": 2000}
+{"argv": ["4 3 2 1 1 2 2 2 4 3 2 1 1 2 2 4"], "clues": [4, 3, 2, 1, 1, 2, 2, 2, 4, 3, 2, 1, 1, 2, 2, 4], "expect": "error", "group": "evalsheet", "id": "evalsheet-06", "n": 4, "note": "sheet: wrong grid, no valid solution", "timeout_ms": 2000}

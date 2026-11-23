@@ -1,0 +1,13 @@
+# c08: grid2d + cands: data id not claimed
+parse = parse.scan
+solve = solve.cands
+print = print.board
+built = yes
+ex_dir = yes
+forbidden = none
+group.ok4 = pass
+group.fmt = pass
+group.nosol4-easy = pass
+sanitizer = clean
+diagnosis = none
+data = data.grid2d                 # + data.cand as "also" (lead, 2026-11-22)
